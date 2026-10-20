@@ -1,30 +1,45 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:meu_bolso/features/autenticacao/domain/entities/perfil_local.dart';
+import 'package:meu_bolso/features/autenticacao/domain/repositories/autenticacao_repository.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'package:meu_bolso/main.dart';
 
+class FakeAutenticacaoRepository implements AutenticacaoRepository {
+  PerfilLocal? perfilArmazenado;
+
+  @override
+  Future<bool> verificarExistenciaPerfil() async => perfilArmazenado != null;
+
+  @override
+  Future<void> cadastrarPerfil(String nome, String email, String senhaClara) async {
+    perfilArmazenado = PerfilLocal(nome: nome, email: email);
+  }
+
+  @override
+  Future<PerfilLocal> realizarLogin(String senhaClara) async => perfilArmazenado!;
+
+  @override
+  Future<PerfilLocal?> obterPerfil() async => perfilArmazenado;
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('MeuBolsoApp carrega tela inicial com sucesso', (tester) async {
+    final repo = FakeAutenticacaoRepository();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MeuBolsoApp(
+        verificarPerfilUseCase: VerificarPerfilUseCase(repo),
+        cadastrarPerfilUseCase: CadastrarPerfilUseCase(repo),
+        loginUseCase: LoginUseCase(repo),
+        obterPerfilUseCase: ObterPerfilUseCase(repo),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('MeuBolso'), findsOneWidget);
+    expect(find.text('Crie seu perfil local'), findsOneWidget);
   });
 }
