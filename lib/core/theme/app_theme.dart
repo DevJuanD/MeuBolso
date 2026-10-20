@@ -1,181 +1,230 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'app_colors.dart';
 import 'cor_financeira.dart';
 
-/// Temas claro e escuro do MeuBolso (Material 3 + Inter).
-///
-/// Uso no MaterialApp:
-/// ```dart
-/// MaterialApp(
-///   theme: AppTheme.claro,
-///   darkTheme: AppTheme.escuro,
-///   themeMode: ThemeMode.system,
-/// )
-/// ```
+/// Temas claro e escuro do MeuBolso, construídos a partir das telas de
+/// referência.
 abstract final class AppTheme {
-  static const Color _primary = Color(0xFF7C3AED);
+  static const String fontFamily = 'PlusJakartaSans';
 
-  // Paleta escura
-  static const Color _darkBackground = Color(0xFF0D0F12);
-  static const Color _darkSurface = Color(0xFF15181D);
-  static const Color _darkOnSurface = Color(0xFFF5F5F5);
-  static const Color _darkOnSurfaceVariant = Color(0xFF8B919A);
-
-  // Paleta clara
-  static const Color _lightBackground = Color(0xFFFFFFFF);
-  static const Color _lightSurface = Color(0xFFF3F4F6);
-  static const Color _lightOnSurface = Color(0xFF1F2937);
-  static const Color _lightOnSurfaceVariant = Color(0xFF6B7280);
-  static const Color _lightCardBorder = Color(0xFFE5E7EB);
-
-  static ThemeData get escuro => _build(
-        colorScheme: ColorScheme.dark(
-          primary: _primary,
-          onPrimary: Colors.white,
-          surface: _darkSurface,
-          onSurface: _darkOnSurface,
-          onSurfaceVariant: _darkOnSurfaceVariant,
-          surfaceContainerLowest: _darkBackground,
+  static TextTheme get _textTheme => TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.8,
         ),
-        cardBorder: BorderSide.none,
+        displayMedium: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.6,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textHeading,
+          letterSpacing: -0.5,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textHeading,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textHeading,
+          letterSpacing: -0.3,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        titleSmall: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+          height: 1.35,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textBody,
+          height: 1.4,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textSecondary,
+          height: 1.35,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        labelMedium: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textBody,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textSecondary,
+          letterSpacing: 0.1,
+        ),
       );
 
-  static ThemeData get claro => _build(
-        colorScheme: ColorScheme.light(
-          primary: _primary,
-          onPrimary: Colors.white,
-          surface: _lightSurface,
-          onSurface: _lightOnSurface,
-          onSurfaceVariant: _lightOnSurfaceVariant,
-          surfaceContainerLowest: _lightBackground,
-        ),
-        cardBorder: BorderSide(color: _lightCardBorder, width: 1),
-      );
+  static ThemeData get claro => _build(Brightness.light);
+  static ThemeData get escuro => _build(Brightness.dark);
 
-  static ThemeData _build({
-    required ColorScheme colorScheme,
-    required BorderSide cardBorder,
-  }) {
-    final textTheme = GoogleFonts.interTextTheme().copyWith(
-      displayLarge: GoogleFonts.inter(
-        fontSize: 40,
-        fontWeight: FontWeight.bold,
-        color: colorScheme.onSurface,
-      ),
-      displayMedium: GoogleFonts.inter(
-        fontSize: 32,
-        fontWeight: FontWeight.bold,
-        color: colorScheme.onSurface,
-      ),
-      headlineSmall: GoogleFonts.inter(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-      ),
-      titleLarge: GoogleFonts.inter(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-      ),
-      titleMedium: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-      ),
-      bodyMedium: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.normal,
-        color: colorScheme.onSurface,
-      ),
-      labelSmall: GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.normal,
-        color: colorScheme.onSurfaceVariant,
-      ),
-    );
+  static ThemeData _build(Brightness brightness) {
+    AppColors.aplicar(brightness);
+    final escuro = brightness == Brightness.dark;
+
+    final colorScheme = escuro
+        ? ColorScheme.dark(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+            secondary: AppColors.primaryDark,
+            onSecondary: Colors.white,
+            surface: AppColors.surface,
+            onSurface: AppColors.textPrimary,
+            onSurfaceVariant: AppColors.textSecondary,
+            error: AppColors.danger,
+            onError: Colors.white,
+            surfaceContainerLowest: AppColors.background,
+          )
+        : ColorScheme.light(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+            secondary: AppColors.primaryDark,
+            onSecondary: Colors.white,
+            surface: AppColors.surface,
+            onSurface: AppColors.textPrimary,
+            onSurfaceVariant: AppColors.textSecondary,
+            error: AppColors.danger,
+            onError: Colors.white,
+            surfaceContainerLowest: AppColors.background,
+          );
 
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
+      fontFamily: fontFamily,
       colorScheme: colorScheme,
-      textTheme: textTheme,
+      textTheme: _textTheme,
       extensions: const [CorFinanceira.padrao],
+      scaffoldBackgroundColor: AppColors.background,
+      splashFactory: InkSparkle.splashFactory,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          minimumSize: const Size.fromHeight(52),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          minimumSize: const Size.fromHeight(50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 16,
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          minimumSize: const Size.fromHeight(48),
+          foregroundColor: AppColors.primary,
+          minimumSize: const Size.fromHeight(46),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: colorScheme.surface,
+        color: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: cardBorder,
         ),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surface,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 14,
+          vertical: 15,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: cardBorder,
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.4),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.danger, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.danger, width: 1.4),
         ),
-        labelStyle: GoogleFonts.inter(color: colorScheme.onSurfaceVariant),
-        hintStyle: GoogleFonts.inter(color: colorScheme.onSurfaceVariant),
+        labelStyle: TextStyle(color: AppColors.textBody),
+        hintStyle: TextStyle(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w400,
+        ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: colorScheme.surface,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurfaceVariant,
-        selectedIconTheme: const IconThemeData(size: 24),
-        unselectedIconTheme: const IconThemeData(size: 24),
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.navUnselected,
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 12),
       ),
-      scaffoldBackgroundColor: colorScheme.surfaceContainerLowest,
+      dividerColor: AppColors.divider,
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor:
+            escuro ? AppColors.surfaceMuted : AppColors.textPrimary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 13,
+          color: escuro ? AppColors.textPrimary : Colors.white,
+        ),
+      ),
     );
   }
 }
