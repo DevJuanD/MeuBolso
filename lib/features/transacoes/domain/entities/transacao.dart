@@ -16,6 +16,7 @@ abstract class Transacao with _$Transacao {
     required int valorCentavos,
     required TipoTransacao tipo,
     required String categoria,
+    String? categoriaId,
     @Default(ModalidadePagamento.pix) ModalidadePagamento modalidade,
     required DateTime data,
     required String competencia,

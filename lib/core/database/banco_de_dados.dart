@@ -37,6 +37,9 @@ class BancoDeDados {
 
   static Future<void> _criarEsquema(Database db, int versao) async {
     await _migracaoV1(db);
+    if (versao >= 2) {
+      await _migracaoV2(db);
+    }
   }
 
   static Future<void> _executarMigracoes(
@@ -45,9 +48,9 @@ class BancoDeDados {
     int versaoNova,
   ) async {
     if (versaoAntiga < 1) await _migracaoV1(db);
+    if (versaoAntiga < 2 && versaoNova >= 2) await _migracaoV2(db);
   }
 
-  // Criada antes de transacoes por ser referenciada como FK.
   static Future<void> _migracaoV1(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS ${EsquemaBanco.tabelaPerfis} (
@@ -72,6 +75,18 @@ class BancoDeDados {
     ''');
 
     await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${EsquemaBanco.tabelaCategorias} (
+        ${EsquemaBanco.colCategoriaId}       TEXT    PRIMARY KEY,
+        ${EsquemaBanco.colCategoriaNome}     TEXT    NOT NULL,
+        ${EsquemaBanco.colCategoriaTipo}     TEXT    NOT NULL CHECK(${EsquemaBanco.colCategoriaTipo} IN ('receita', 'despesa')),
+        ${EsquemaBanco.colCategoriaIsPadrao} INTEGER NOT NULL DEFAULT 0,
+        UNIQUE (${EsquemaBanco.colCategoriaNome}, ${EsquemaBanco.colCategoriaTipo})
+      );
+    ''');
+
+    await popularCategoriasPadrao(db);
+
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS ${EsquemaBanco.tabelaTransacoes} (
         ${EsquemaBanco.colTransacaoId}            INTEGER PRIMARY KEY AUTOINCREMENT,
         ${EsquemaBanco.colTransacaoDescricao}     TEXT    NOT NULL
@@ -79,6 +94,7 @@ class BancoDeDados {
         ${EsquemaBanco.colTransacaoValorCentavos} INTEGER NOT NULL CHECK(${EsquemaBanco.colTransacaoValorCentavos} > 0),
         ${EsquemaBanco.colTransacaoTipo}          TEXT    NOT NULL CHECK(${EsquemaBanco.colTransacaoTipo} IN ('receita', 'despesa')),
         ${EsquemaBanco.colTransacaoCategoria}     TEXT    NOT NULL,
+        ${EsquemaBanco.colTransacaoCategoriaId}   TEXT REFERENCES ${EsquemaBanco.tabelaCategorias}(${EsquemaBanco.colCategoriaId}),
         ${EsquemaBanco.colTransacaoModalidade}    TEXT    NOT NULL CHECK(${EsquemaBanco.colTransacaoModalidade} IN ('pix', 'debito', 'credito', 'dinheiro')),
         ${EsquemaBanco.colTransacaoDataTransacao} TEXT    NOT NULL,
         ${EsquemaBanco.colTransacaoCompetencia}   TEXT    NOT NULL,
@@ -103,5 +119,150 @@ class BancoDeDados {
           ${EsquemaBanco.colTransacaoRecorrenciaId}
         );
     ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_transacoes_categoria_id
+        ON ${EsquemaBanco.tabelaTransacoes} (
+          ${EsquemaBanco.colTransacaoCategoriaId}
+        );
+    ''');
+  }
+
+  static Future<void> _migracaoV2(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${EsquemaBanco.tabelaCategorias} (
+        ${EsquemaBanco.colCategoriaId}       TEXT    PRIMARY KEY,
+        ${EsquemaBanco.colCategoriaNome}     TEXT    NOT NULL,
+        ${EsquemaBanco.colCategoriaTipo}     TEXT    NOT NULL CHECK(${EsquemaBanco.colCategoriaTipo} IN ('receita', 'despesa')),
+        ${EsquemaBanco.colCategoriaIsPadrao} INTEGER NOT NULL DEFAULT 0,
+        UNIQUE (${EsquemaBanco.colCategoriaNome}, ${EsquemaBanco.colCategoriaTipo})
+      );
+    ''');
+
+    await popularCategoriasPadrao(db);
+
+    final infoColunas = await db.rawQuery(
+      'PRAGMA table_info(${EsquemaBanco.tabelaTransacoes});',
+    );
+    final possuiColunaCategoriaId = infoColunas.any(
+      (coluna) => coluna['name'] == EsquemaBanco.colTransacaoCategoriaId,
+    );
+
+    if (!possuiColunaCategoriaId) {
+      await db.execute('''
+        ALTER TABLE ${EsquemaBanco.tabelaTransacoes}
+        ADD COLUMN ${EsquemaBanco.colTransacaoCategoriaId} TEXT REFERENCES ${EsquemaBanco.tabelaCategorias}(${EsquemaBanco.colCategoriaId});
+      ''');
+    }
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_transacoes_categoria_id
+        ON ${EsquemaBanco.tabelaTransacoes} (
+          ${EsquemaBanco.colTransacaoCategoriaId}
+        );
+    ''');
+  }
+
+  /// Popula as categorias padrão do projeto de forma idempotente.
+  static Future<void> popularCategoriasPadrao(DatabaseExecutor db) async {
+    const categoriasPadrao = [
+      // Receitas padrão
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_salario',
+        EsquemaBanco.colCategoriaNome: 'Salário',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_freelance',
+        EsquemaBanco.colCategoriaNome: 'Freelance',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_vendas',
+        EsquemaBanco.colCategoriaNome: 'Vendas',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_rendimentos',
+        EsquemaBanco.colCategoriaNome: 'Rendimentos',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_presente',
+        EsquemaBanco.colCategoriaNome: 'Presente',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_receita_outros',
+        EsquemaBanco.colCategoriaNome: 'Outros',
+        EsquemaBanco.colCategoriaTipo: 'receita',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      // Despesas padrão
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_alimentacao',
+        EsquemaBanco.colCategoriaNome: 'Alimentação',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_transporte',
+        EsquemaBanco.colCategoriaNome: 'Transporte',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_moradia',
+        EsquemaBanco.colCategoriaNome: 'Moradia',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_contas_e_servicos',
+        EsquemaBanco.colCategoriaNome: 'Contas e serviços',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_saude',
+        EsquemaBanco.colCategoriaNome: 'Saúde',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_lazer',
+        EsquemaBanco.colCategoriaNome: 'Lazer',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_compras',
+        EsquemaBanco.colCategoriaNome: 'Compras',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+      {
+        EsquemaBanco.colCategoriaId: 'padrao_despesa_outros',
+        EsquemaBanco.colCategoriaNome: 'Outros',
+        EsquemaBanco.colCategoriaTipo: 'despesa',
+        EsquemaBanco.colCategoriaIsPadrao: 1,
+      },
+    ];
+
+    for (final categoria in categoriasPadrao) {
+      await db.insert(
+        EsquemaBanco.tabelaCategorias,
+        categoria,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
   }
 }
+
+/// Apelido para manter conformidade com a nomenclatura técnica da especificação.
+typedef ServicoBancoDados = BancoDeDados;

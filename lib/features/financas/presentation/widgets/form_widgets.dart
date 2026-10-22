@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../categorias/presentation/widgets/modal_nova_categoria.dart';
+import '../../../core/domain/enums/tipo_transacao.dart';
 import '../../domain/models/movimentacao.dart';
+
+export '../../../categorias/presentation/widgets/modal_nova_categoria.dart';
+export '../../../categorias/presentation/widgets/seletor_categoria_widget.dart';
 
 class FormLabel extends StatelessWidget {
   final String text;
@@ -508,76 +513,18 @@ Future<String?> mostrarDialogoCategoria(
   required String titulo,
   required String descricao,
   required String valorInicial,
-}) {
-  final controller = TextEditingController(text: valorInicial);
-  return showDialog<String>(
-    context: context,
-    barrierColor: const Color(0x99667085),
-    builder: (dialogContext) {
-      return Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 22),
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                titulo,
-                style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                  color: AppColors.textHeading,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                descricao,
-                style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 22),
-              const FormLabel('Nome da categoria'),
-              AppTextField(
-                controller: controller,
-                hint: 'Nome da categoria',
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final nome = controller.text.trim();
-                    Navigator.of(dialogContext).pop(nome.isEmpty ? null : nome);
-                  },
-                  child: const Text('Salvar tipo'),
-                ),
-              ),
-              const SizedBox(height: 3),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancelar'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+}) async {
+  final tipo = titulo.toLowerCase().contains('receita')
+      ? TipoTransacao.receita
+      : TipoTransacao.despesa;
+
+  final categoria = await mostrarModalNovaCategoria(
+    context,
+    tipo: tipo,
+    valorInicial: valorInicial,
   );
+
+  return categoria?.nome;
 }
 
 Future<bool> mostrarDialogoExcluirReceita(BuildContext context) async {

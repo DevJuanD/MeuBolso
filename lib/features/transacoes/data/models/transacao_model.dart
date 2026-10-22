@@ -10,6 +10,7 @@ class TransacaoModel {
   final int valorCentavos;
   final TipoTransacao tipo;
   final String categoria;
+  final String? categoriaId;
   final ModalidadePagamento modalidade;
   final DateTime data;
   final String competencia;
@@ -23,6 +24,7 @@ class TransacaoModel {
     required this.valorCentavos,
     required this.tipo,
     required this.categoria,
+    this.categoriaId,
     required this.modalidade,
     required this.data,
     required this.competencia,
@@ -39,6 +41,7 @@ class TransacaoModel {
       valorCentavos: transacao.valorCentavos,
       tipo: transacao.tipo,
       categoria: transacao.categoria,
+      categoriaId: transacao.categoriaId,
       modalidade: transacao.modalidade,
       data: transacao.data,
       competencia: transacao.competencia,
@@ -56,6 +59,7 @@ class TransacaoModel {
       valorCentavos: valorCentavos,
       tipo: tipo,
       categoria: categoria,
+      categoriaId: categoriaId,
       modalidade: modalidade,
       data: data,
       competencia: competencia,
@@ -77,6 +81,7 @@ class TransacaoModel {
       valorCentavos: mapa[EsquemaBanco.colTransacaoValorCentavos] as int,
       tipo: TipoTransacao.deTexto(mapa[EsquemaBanco.colTransacaoTipo] as String),
       categoria: mapa[EsquemaBanco.colTransacaoCategoria] as String,
+      categoriaId: mapa[EsquemaBanco.colTransacaoCategoriaId] as String?,
       modalidade: ModalidadePagamento.deTexto(
         mapa[EsquemaBanco.colTransacaoModalidade] as String,
       ),
@@ -95,6 +100,7 @@ class TransacaoModel {
       EsquemaBanco.colTransacaoValorCentavos: valorCentavos,
       EsquemaBanco.colTransacaoTipo: tipo.valorBanco,
       EsquemaBanco.colTransacaoCategoria: categoria,
+      EsquemaBanco.colTransacaoCategoriaId: categoriaId,
       EsquemaBanco.colTransacaoModalidade: modalidade.valorBanco,
       EsquemaBanco.colTransacaoDataTransacao: data.toIso8601String(),
       EsquemaBanco.colTransacaoCompetencia: competencia,

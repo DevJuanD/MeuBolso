@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../core/domain/enums/tipo_transacao.dart';
 import '../../data/dados_demonstracao.dart';
 import '../../domain/models/movimentacao.dart';
 import '../controllers/financas_controller.dart';
@@ -80,17 +81,16 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
   }
 
   Future<void> _criarCategoria() async {
-    final nome = await mostrarDialogoCategoria(
+    final novaCategoria = await mostrarModalNovaCategoria(
       context,
-      titulo: 'Novo tipo de receita',
-      descricao: 'Dê um nome para identificar suas entradas.',
+      tipo: TipoTransacao.receita,
       valorInicial: 'Consultoria',
     );
-    if (nome == null || nome.isEmpty) return;
-    widget.controller.adicionarCategoriaReceita(nome);
+    if (novaCategoria == null || novaCategoria.nome.isEmpty) return;
+    widget.controller.adicionarCategoriaReceita(novaCategoria.nome);
     if (!mounted) return;
     setState(() {
-      _categoria = nome;
+      _categoria = novaCategoria.nome;
       _mostrarChips = true;
     });
   }

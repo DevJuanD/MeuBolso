@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Transacao {
 
- int? get id; String get descricao; int get valorCentavos; TipoTransacao get tipo; String get categoria; ModalidadePagamento get modalidade; DateTime get data; String get competencia; int? get recorrenciaId; DateTime? get excluidaEm; DateTime get criadoEm;
+ int? get id; String get descricao; int get valorCentavos; TipoTransacao get tipo; String get categoria; String? get categoriaId; ModalidadePagamento get modalidade; DateTime get data; String get competencia; int? get recorrenciaId; DateTime? get excluidaEm; DateTime get criadoEm;
 /// Create a copy of Transacao
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $TransacaoCopyWith<Transacao> get copyWith => _$TransacaoCopyWithImpl<Transacao>
 @override
 bool operator ==(Object other) {
   final _this = this as Transacao;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transacao&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.descricao, _this.descricao) || other.descricao == _this.descricao)&&(identical(other.valorCentavos, _this.valorCentavos) || other.valorCentavos == _this.valorCentavos)&&(identical(other.tipo, _this.tipo) || other.tipo == _this.tipo)&&(identical(other.categoria, _this.categoria) || other.categoria == _this.categoria)&&(identical(other.modalidade, _this.modalidade) || other.modalidade == _this.modalidade)&&(identical(other.data, _this.data) || other.data == _this.data)&&(identical(other.competencia, _this.competencia) || other.competencia == _this.competencia)&&(identical(other.recorrenciaId, _this.recorrenciaId) || other.recorrenciaId == _this.recorrenciaId)&&(identical(other.excluidaEm, _this.excluidaEm) || other.excluidaEm == _this.excluidaEm)&&(identical(other.criadoEm, _this.criadoEm) || other.criadoEm == _this.criadoEm));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transacao&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.descricao, _this.descricao) || other.descricao == _this.descricao)&&(identical(other.valorCentavos, _this.valorCentavos) || other.valorCentavos == _this.valorCentavos)&&(identical(other.tipo, _this.tipo) || other.tipo == _this.tipo)&&(identical(other.categoria, _this.categoria) || other.categoria == _this.categoria)&&(identical(other.categoriaId, _this.categoriaId) || other.categoriaId == _this.categoriaId)&&(identical(other.modalidade, _this.modalidade) || other.modalidade == _this.modalidade)&&(identical(other.data, _this.data) || other.data == _this.data)&&(identical(other.competencia, _this.competencia) || other.competencia == _this.competencia)&&(identical(other.recorrenciaId, _this.recorrenciaId) || other.recorrenciaId == _this.recorrenciaId)&&(identical(other.excluidaEm, _this.excluidaEm) || other.excluidaEm == _this.excluidaEm)&&(identical(other.criadoEm, _this.criadoEm) || other.criadoEm == _this.criadoEm));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Transacao;
-  return Object.hash(runtimeType,_this.id,_this.descricao,_this.valorCentavos,_this.tipo,_this.categoria,_this.modalidade,_this.data,_this.competencia,_this.recorrenciaId,_this.excluidaEm,_this.criadoEm);
+  return Object.hash(runtimeType,_this.id,_this.descricao,_this.valorCentavos,_this.tipo,_this.categoria,_this.categoriaId,_this.modalidade,_this.data,_this.competencia,_this.recorrenciaId,_this.excluidaEm,_this.criadoEm);
 }
 
 @override
 String toString() {
   final _this = this as Transacao;
-  return 'Transacao(id: ${_this.id}, descricao: ${_this.descricao}, valorCentavos: ${_this.valorCentavos}, tipo: ${_this.tipo}, categoria: ${_this.categoria}, modalidade: ${_this.modalidade}, data: ${_this.data}, competencia: ${_this.competencia}, recorrenciaId: ${_this.recorrenciaId}, excluidaEm: ${_this.excluidaEm}, criadoEm: ${_this.criadoEm})';
+  return 'Transacao(id: ${_this.id}, descricao: ${_this.descricao}, valorCentavos: ${_this.valorCentavos}, tipo: ${_this.tipo}, categoria: ${_this.categoria}, categoriaId: ${_this.categoriaId}, modalidade: ${_this.modalidade}, data: ${_this.data}, competencia: ${_this.competencia}, recorrenciaId: ${_this.recorrenciaId}, excluidaEm: ${_this.excluidaEm}, criadoEm: ${_this.criadoEm})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $TransacaoCopyWith<$Res>  {
   factory $TransacaoCopyWith(Transacao value, $Res Function(Transacao) _then) = _$TransacaoCopyWithImpl;
 @useResult
 $Res call({
- int? id, String descricao, int valorCentavos, TipoTransacao tipo, String categoria, ModalidadePagamento modalidade, DateTime data, String competencia, int? recorrenciaId, DateTime? excluidaEm, DateTime criadoEm
+ int? id, String descricao, int valorCentavos, TipoTransacao tipo, String categoria, String? categoriaId, ModalidadePagamento modalidade, DateTime data, String competencia, int? recorrenciaId, DateTime? excluidaEm, DateTime criadoEm
 });
 
 
@@ -68,14 +68,15 @@ class _$TransacaoCopyWithImpl<$Res>
 
 /// Create a copy of Transacao
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? descricao = null,Object? valorCentavos = null,Object? tipo = null,Object? categoria = null,Object? modalidade = null,Object? data = null,Object? competencia = null,Object? recorrenciaId = freezed,Object? excluidaEm = freezed,Object? criadoEm = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? descricao = null,Object? valorCentavos = null,Object? tipo = null,Object? categoria = null,Object? categoriaId = freezed,Object? modalidade = null,Object? data = null,Object? competencia = null,Object? recorrenciaId = freezed,Object? excluidaEm = freezed,Object? criadoEm = null,}) {
   return _then(Transacao(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,descricao: null == descricao ? _self.descricao : descricao // ignore: cast_nullable_to_non_nullable
 as String,valorCentavos: null == valorCentavos ? _self.valorCentavos : valorCentavos // ignore: cast_nullable_to_non_nullable
 as int,tipo: null == tipo ? _self.tipo : tipo // ignore: cast_nullable_to_non_nullable
 as TipoTransacao,categoria: null == categoria ? _self.categoria : categoria // ignore: cast_nullable_to_non_nullable
-as String,modalidade: null == modalidade ? _self.modalidade : modalidade // ignore: cast_nullable_to_non_nullable
+as String,categoriaId: freezed == categoriaId ? _self.categoriaId : categoriaId // ignore: cast_nullable_to_non_nullable
+as String?,modalidade: null == modalidade ? _self.modalidade : modalidade // ignore: cast_nullable_to_non_nullable
 as ModalidadePagamento,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as DateTime,competencia: null == competencia ? _self.competencia : competencia // ignore: cast_nullable_to_non_nullable
 as String,recorrenciaId: freezed == recorrenciaId ? _self.recorrenciaId : recorrenciaId // ignore: cast_nullable_to_non_nullable
@@ -166,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  String? categoriaId,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Transacao() when $default != null:
-return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
+return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.categoriaId,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
   return orElse();
 
 }
@@ -187,10 +188,10 @@ return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  String? categoriaId,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)  $default,) {final _that = this;
 switch (_that) {
 case _Transacao():
-return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
+return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.categoriaId,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +208,10 @@ return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String descricao,  int valorCentavos,  TipoTransacao tipo,  String categoria,  String? categoriaId,  ModalidadePagamento modalidade,  DateTime data,  String competencia,  int? recorrenciaId,  DateTime? excluidaEm,  DateTime criadoEm)?  $default,) {final _that = this;
 switch (_that) {
 case _Transacao() when $default != null:
-return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
+return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.categoria,_that.categoriaId,_that.modalidade,_that.data,_that.competencia,_that.recorrenciaId,_that.excluidaEm,_that.criadoEm);case _:
   return null;
 
 }
@@ -222,7 +223,7 @@ return $default(_that.id,_that.descricao,_that.valorCentavos,_that.tipo,_that.ca
 
 
 class _Transacao extends Transacao {
-  const _Transacao({this.id, required this.descricao, required this.valorCentavos, required this.tipo, required this.categoria, this.modalidade = ModalidadePagamento.pix, required this.data, required this.competencia, this.recorrenciaId, this.excluidaEm, required this.criadoEm}): super._();
+  const _Transacao({this.id, required this.descricao, required this.valorCentavos, required this.tipo, required this.categoria, this.categoriaId, this.modalidade = ModalidadePagamento.pix, required this.data, required this.competencia, this.recorrenciaId, this.excluidaEm, required this.criadoEm}): super._();
   
 
 @override final  int? id;
@@ -230,6 +231,7 @@ class _Transacao extends Transacao {
 @override final  int valorCentavos;
 @override final  TipoTransacao tipo;
 @override final  String categoria;
+@override final  String? categoriaId;
 @override@JsonKey() final  ModalidadePagamento modalidade;
 @override final  DateTime data;
 @override final  String competencia;
@@ -247,18 +249,18 @@ _$TransacaoCopyWith<_Transacao> get copyWith => __$TransacaoCopyWithImpl<_Transa
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Transacao&&(identical(other.id, id) || other.id == id)&&(identical(other.descricao, descricao) || other.descricao == descricao)&&(identical(other.valorCentavos, valorCentavos) || other.valorCentavos == valorCentavos)&&(identical(other.tipo, tipo) || other.tipo == tipo)&&(identical(other.categoria, categoria) || other.categoria == categoria)&&(identical(other.modalidade, modalidade) || other.modalidade == modalidade)&&(identical(other.data, data) || other.data == data)&&(identical(other.competencia, competencia) || other.competencia == competencia)&&(identical(other.recorrenciaId, recorrenciaId) || other.recorrenciaId == recorrenciaId)&&(identical(other.excluidaEm, excluidaEm) || other.excluidaEm == excluidaEm)&&(identical(other.criadoEm, criadoEm) || other.criadoEm == criadoEm));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Transacao&&(identical(other.id, id) || other.id == id)&&(identical(other.descricao, descricao) || other.descricao == descricao)&&(identical(other.valorCentavos, valorCentavos) || other.valorCentavos == valorCentavos)&&(identical(other.tipo, tipo) || other.tipo == tipo)&&(identical(other.categoria, categoria) || other.categoria == categoria)&&(identical(other.categoriaId, categoriaId) || other.categoriaId == categoriaId)&&(identical(other.modalidade, modalidade) || other.modalidade == modalidade)&&(identical(other.data, data) || other.data == data)&&(identical(other.competencia, competencia) || other.competencia == competencia)&&(identical(other.recorrenciaId, recorrenciaId) || other.recorrenciaId == recorrenciaId)&&(identical(other.excluidaEm, excluidaEm) || other.excluidaEm == excluidaEm)&&(identical(other.criadoEm, criadoEm) || other.criadoEm == criadoEm));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,descricao,valorCentavos,tipo,categoria,modalidade,data,competencia,recorrenciaId,excluidaEm,criadoEm);
+    return Object.hash(runtimeType,id,descricao,valorCentavos,tipo,categoria,categoriaId,modalidade,data,competencia,recorrenciaId,excluidaEm,criadoEm);
 }
 
 @override
 String toString() {
-    return 'Transacao(id: $id, descricao: $descricao, valorCentavos: $valorCentavos, tipo: $tipo, categoria: $categoria, modalidade: $modalidade, data: $data, competencia: $competencia, recorrenciaId: $recorrenciaId, excluidaEm: $excluidaEm, criadoEm: $criadoEm)';
+    return 'Transacao(id: $id, descricao: $descricao, valorCentavos: $valorCentavos, tipo: $tipo, categoria: $categoria, categoriaId: $categoriaId, modalidade: $modalidade, data: $data, competencia: $competencia, recorrenciaId: $recorrenciaId, excluidaEm: $excluidaEm, criadoEm: $criadoEm)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$TransacaoCopyWith<$Res> implements $TransacaoCopyWith<$Re
   factory _$TransacaoCopyWith(_Transacao value, $Res Function(_Transacao) _then) = __$TransacaoCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, String descricao, int valorCentavos, TipoTransacao tipo, String categoria, ModalidadePagamento modalidade, DateTime data, String competencia, int? recorrenciaId, DateTime? excluidaEm, DateTime criadoEm
+ int? id, String descricao, int valorCentavos, TipoTransacao tipo, String categoria, String? categoriaId, ModalidadePagamento modalidade, DateTime data, String competencia, int? recorrenciaId, DateTime? excluidaEm, DateTime criadoEm
 });
 
 
@@ -286,14 +288,15 @@ class __$TransacaoCopyWithImpl<$Res>
 
 /// Create a copy of Transacao
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? descricao = null,Object? valorCentavos = null,Object? tipo = null,Object? categoria = null,Object? modalidade = null,Object? data = null,Object? competencia = null,Object? recorrenciaId = freezed,Object? excluidaEm = freezed,Object? criadoEm = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? descricao = null,Object? valorCentavos = null,Object? tipo = null,Object? categoria = null,Object? categoriaId = freezed,Object? modalidade = null,Object? data = null,Object? competencia = null,Object? recorrenciaId = freezed,Object? excluidaEm = freezed,Object? criadoEm = null,}) {
   return _then(_Transacao(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,descricao: null == descricao ? _self.descricao : descricao // ignore: cast_nullable_to_non_nullable
 as String,valorCentavos: null == valorCentavos ? _self.valorCentavos : valorCentavos // ignore: cast_nullable_to_non_nullable
 as int,tipo: null == tipo ? _self.tipo : tipo // ignore: cast_nullable_to_non_nullable
 as TipoTransacao,categoria: null == categoria ? _self.categoria : categoria // ignore: cast_nullable_to_non_nullable
-as String,modalidade: null == modalidade ? _self.modalidade : modalidade // ignore: cast_nullable_to_non_nullable
+as String,categoriaId: freezed == categoriaId ? _self.categoriaId : categoriaId // ignore: cast_nullable_to_non_nullable
+as String?,modalidade: null == modalidade ? _self.modalidade : modalidade // ignore: cast_nullable_to_non_nullable
 as ModalidadePagamento,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as DateTime,competencia: null == competencia ? _self.competencia : competencia // ignore: cast_nullable_to_non_nullable
 as String,recorrenciaId: freezed == recorrenciaId ? _self.recorrenciaId : recorrenciaId // ignore: cast_nullable_to_non_nullable
