@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../controllers/financas_controller.dart';
-import 'dashboard_page.dart';
 import 'despesas_page.dart';
-import 'filtros_relatorio_page.dart';
 import 'movimentacoes_page.dart';
 import 'receitas_page.dart';
 import 'relatorios_page.dart';
@@ -12,11 +12,13 @@ import 'relatorios_page.dart';
 class RootShell extends StatefulWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
+  final DashboardController dashboardController;
 
   const RootShell({
     super.key,
     this.themeMode = ThemeMode.system,
     this.onThemeModeChanged,
+    required this.dashboardController,
   });
 
   @override
@@ -43,36 +45,12 @@ class _RootShellState extends State<RootShell> {
     }
   }
 
-  void _abrirReceitas() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() => _aba = 0);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ReceitasPage(
-          controller: _controller,
-          onAbaSelecionada: _selecionarAba,
-        ),
-      ),
-    );
-  }
-
   void _abrirMovimentacoes() {
     Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() => _aba = 0);
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => MovimentacoesPage(
-          controller: _controller,
-          onAbaSelecionada: _selecionarAba,
-        ),
-      ),
-    );
-  }
-
-  void _abrirFiltros() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => FiltrosRelatorioPage(
           controller: _controller,
           onAbaSelecionada: _selecionarAba,
         ),
@@ -235,10 +213,8 @@ class _RootShellState extends State<RootShell> {
         );
       default:
         return DashboardPage(
-          controller: _controller,
-          onAbrirReceitas: _abrirReceitas,
+          controller: widget.dashboardController,
           onAbrirMovimentacoes: _abrirMovimentacoes,
-          onAbrirFiltros: _abrirFiltros,
           onAbaSelecionada: _selecionarAba,
         );
     }

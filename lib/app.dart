@@ -10,6 +10,8 @@ import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'features/autenticacao/presentation/controllers/autenticacao_controller.dart';
 import 'features/autenticacao/presentation/pages/login_page.dart';
+import 'features/dashboard/domain/usecases/obter_resumo_dashboard_usecase.dart';
+import 'features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'features/financas/presentation/pages/root_shell.dart';
 
 class MeuBolsoApp extends StatefulWidget {
@@ -17,6 +19,7 @@ class MeuBolsoApp extends StatefulWidget {
   final CadastrarPerfilUseCase cadastrarPerfilUseCase;
   final LoginUseCase loginUseCase;
   final ObterPerfilUseCase obterPerfilUseCase;
+  final ObterResumoDashboardUseCase obterResumoDashboardUseCase;
 
   const MeuBolsoApp({
     super.key,
@@ -24,6 +27,7 @@ class MeuBolsoApp extends StatefulWidget {
     required this.cadastrarPerfilUseCase,
     required this.loginUseCase,
     required this.obterPerfilUseCase,
+    required this.obterResumoDashboardUseCase,
   });
 
   @override
@@ -32,6 +36,7 @@ class MeuBolsoApp extends StatefulWidget {
 
 class _MeuBolsoAppState extends State<MeuBolsoApp> {
   late final AutenticacaoController _autenticacaoController;
+  late final DashboardController _dashboardController;
   ThemeMode _tema = ThemeMode.system;
   bool _autenticado = false;
 
@@ -44,11 +49,16 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
       loginUseCase: widget.loginUseCase,
       obterPerfilUseCase: widget.obterPerfilUseCase,
     );
+    _dashboardController = DashboardController(
+      obterResumoDashboardUseCase: widget.obterResumoDashboardUseCase,
+      obterPerfilUseCase: widget.obterPerfilUseCase,
+    );
   }
 
   @override
   void dispose() {
     _autenticacaoController.dispose();
+    _dashboardController.dispose();
     super.dispose();
   }
 
@@ -88,6 +98,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
             return RootShell(
               themeMode: _tema,
               onThemeModeChanged: _alterarTema,
+              dashboardController: _dashboardController,
             );
           }
 

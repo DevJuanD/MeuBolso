@@ -6,6 +6,11 @@ import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil
 import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
+import 'package:meu_bolso/features/dashboard/domain/entities/resumo_mensal.dart';
+import 'package:meu_bolso/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:meu_bolso/features/dashboard/domain/usecases/obter_resumo_dashboard_usecase.dart';
+import 'package:meu_bolso/features/core/domain/enums/tipo_transacao.dart';
+import 'package:meu_bolso/features/transacoes/domain/entities/transacao.dart';
 import 'package:meu_bolso/app.dart';
 
 class FakeAutenticacaoRepository implements AutenticacaoRepository {
@@ -26,6 +31,40 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
   Future<PerfilLocal?> obterPerfil() async => perfilArmazenado;
 }
 
+class FakeDashboardRepository implements DashboardRepository {
+  @override
+  Future<ResumoMensal> obterResumoMensal(DateTime mesReferencia) async {
+    return ResumoMensal(
+      mesAtual: DateTime(mesReferencia.year, mesReferencia.month),
+      totalReceitas: 325000,
+      totalDespesas: 132000,
+      saldo: 193000,
+      variacaoSaldo: 12.5,
+      variacaoReceitas: 8.2,
+      variacaoDespesas: -4.7,
+    );
+  }
+
+  @override
+  Future<List<Transacao>> obterUltimasTransacoes(
+    DateTime mesReferencia,
+    int limite,
+  ) async {
+    return [
+      Transacao(
+        descricao: 'Salário',
+        valorCentavos: 325000,
+        tipo: TipoTransacao.receita,
+        categoria: 'Salário',
+        data: DateTime(mesReferencia.year, mesReferencia.month, 15),
+        competencia:
+            '${mesReferencia.year}-${mesReferencia.month.toString().padLeft(2, '0')}',
+        criadoEm: DateTime.now(),
+      ),
+    ];
+  }
+}
+
 void main() {
   testWidgets('MeuBolsoApp carrega tela inicial com sucesso', (tester) async {
     final repo = FakeAutenticacaoRepository();
@@ -36,6 +75,9 @@ void main() {
         cadastrarPerfilUseCase: CadastrarPerfilUseCase(repo),
         loginUseCase: LoginUseCase(repo),
         obterPerfilUseCase: ObterPerfilUseCase(repo),
+        obterResumoDashboardUseCase: ObterResumoDashboardUseCase(
+          FakeDashboardRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -60,6 +102,9 @@ void main() {
         cadastrarPerfilUseCase: CadastrarPerfilUseCase(repo),
         loginUseCase: LoginUseCase(repo),
         obterPerfilUseCase: ObterPerfilUseCase(repo),
+        obterResumoDashboardUseCase: ObterResumoDashboardUseCase(
+          FakeDashboardRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

@@ -8,6 +8,9 @@ import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
 import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
+import 'features/dashboard/data/datasources/dashboard_local_datasource.dart';
+import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'features/dashboard/domain/usecases/obter_resumo_dashboard_usecase.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +24,19 @@ void main() {
   final loginUseCase = LoginUseCase(repositorio);
   final obterPerfilUseCase = ObterPerfilUseCase(repositorio);
 
+  const dashboardDataSource = DashboardLocalDataSource();
+  const dashboardRepositorio = DashboardRepositoryImpl(dashboardDataSource);
+  final obterResumoDashboardUseCase = ObterResumoDashboardUseCase(
+    dashboardRepositorio,
+  );
+
   runApp(
     MeuBolsoApp(
       verificarPerfilUseCase: verificarPerfilUseCase,
       cadastrarPerfilUseCase: cadastrarPerfilUseCase,
       loginUseCase: loginUseCase,
       obterPerfilUseCase: obterPerfilUseCase,
+      obterResumoDashboardUseCase: obterResumoDashboardUseCase,
     ),
   );
 }
