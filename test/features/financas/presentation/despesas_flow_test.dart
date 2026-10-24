@@ -3,10 +3,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_bolso/core/theme/app_colors.dart';
 import 'package:meu_bolso/core/theme/app_theme.dart';
-import 'package:meu_bolso/features/financas/domain/models/movimentacao.dart';
-import 'package:meu_bolso/features/financas/presentation/controllers/financas_controller.dart';
+import 'package:meu_bolso/features/core/domain/enums/tipo_transacao.dart';
 import 'package:meu_bolso/features/financas/presentation/pages/despesa_form_page.dart';
 import 'package:meu_bolso/features/financas/presentation/pages/despesas_page.dart';
+import 'package:meu_bolso/features/transacoes/domain/entities/transacao.dart';
+import 'package:meu_bolso/features/transacoes/presentation/controllers/transacoes_controller.dart';
+
+import '../../../helpers/fakes_financeiros.dart';
 
 Widget _criarWidgetTeste(Widget child) {
   AppColors.aplicar(Brightness.light);
@@ -25,13 +28,35 @@ Widget _criarWidgetTeste(Widget child) {
 
 void main() {
   group('Fluxo Visual de Gerenciamento de Despesas (T03 e T04)', () {
-    late FinancasController controller;
+    late FakeTransacoesRepository repositorio;
+    late TransacoesController controller;
+    late DateTime mesAtual;
 
     setUp(() {
-      controller = FinancasController();
+      repositorio = FakeTransacoesRepository();
+      controller = criarTransacoesController(
+        transacoesRepositorio: repositorio,
+      );
+
+      mesAtual = DateTime.now();
+      repositorio.dados.add(
+        Transacao(
+          id: 1,
+          descricao: 'Supermercado',
+          valorCentavos: 45000,
+          tipo: TipoTransacao.despesa,
+          categoria: 'Alimentação',
+          categoriaId: 'padrao_desp_1',
+          data: DateTime(mesAtual.year, mesAtual.month, 10),
+          competencia:
+              '${mesAtual.year}-${mesAtual.month.toString().padLeft(2, '0')}',
+          criadoEm: DateTime.now(),
+        ),
+      );
     });
 
-    testWidgets('DespesasPage exibe cabeçalho, total do mês e itens registrados', (tester) async {
+    testWidgets('DespesasPage exibe cabeçalho, total do mês e itens registrados',
+        (tester) async {
       await tester.pumpWidget(
         _criarWidgetTeste(
           DespesasPage(
@@ -49,9 +74,11 @@ void main() {
       expect(find.text('Despesas registradas'), findsOneWidget);
       expect(find.text('+ Adicionar despesa'), findsOneWidget);
       expect(find.text('Ver todas as despesas'), findsOneWidget);
+      expect(find.text('Supermercado'), findsOneWidget);
     });
 
-    testWidgets('DespesasPage abre diálogo de confirmação ao clicar em excluir', (tester) async {
+    testWidgets('DespesasPage abre diálogo de confirmação ao clicar em excluir',
+        (tester) async {
       await tester.pumpWidget(
         _criarWidgetTeste(
           DespesasPage(
@@ -81,7 +108,8 @@ void main() {
       expect(find.text('Excluir despesa?'), findsNothing);
     });
 
-    testWidgets('DespesaFormPage valida valor obrigatório e categoria', (tester) async {
+    testWidgets('DespesaFormPage valida valor obrigatório e categoria',
+        (tester) async {
       await tester.pumpWidget(
         _criarWidgetTeste(
           DespesaFormPage(controller: controller),
@@ -100,14 +128,17 @@ void main() {
       expect(find.text('Informe o valor da despesa.'), findsOneWidget);
     });
 
-    testWidgets('DespesaFormPage exibe títulos de edição para despesa existente', (tester) async {
-      final despesaExistente = Movimentacao(
+    testWidgets('DespesaFormPage exibe títulos de edição para despesa existente',
+        (tester) async {
+      final despesaExistente = Transacao(
         id: 101,
         descricao: 'Supermercado Mensal',
         categoria: 'Alimentação',
         valorCentavos: 45000,
+        tipo: TipoTransacao.despesa,
         data: DateTime(2026, 10, 15),
-        tipo: TipoMovimentacao.despesa,
+        competencia: '2026-10',
+        criadoEm: DateTime(2026, 10, 15),
       );
 
       await tester.pumpWidget(

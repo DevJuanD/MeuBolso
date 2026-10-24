@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
+import '../../../categorias/domain/entities/categoria.dart';
 import '../../../core/domain/enums/tipo_transacao.dart';
-import '../../data/dados_demonstracao.dart';
+import '../../../transacoes/domain/entities/transacao.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import '../../domain/models/movimentacao.dart';
-import '../controllers/financas_controller.dart';
 import '../widgets/app_header.dart';
 import '../widgets/form_widgets.dart';
 
 class ReceitaFormPage extends StatefulWidget {
-  final FinancasController controller;
-  final Movimentacao? receita;
+  final TransacoesController controller;
+  final Transacao? receita;
 
   const ReceitaFormPage({
     super.key,
@@ -25,8 +28,8 @@ class ReceitaFormPage extends StatefulWidget {
 class _ReceitaFormPageState extends State<ReceitaFormPage> {
   late final TextEditingController _valorController;
   late final TextEditingController _descricaoController;
-  String? _categoria;
-  DateTime _data = DateTime(2026, 10, 18);
+  String? _categoriaSelecionada;
+  late DateTime _data;
   bool _mostrarChips = false;
 
   bool get _editando => widget.receita != null;
@@ -36,25 +39,52 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
     super.initState();
     final receita = widget.receita;
     _valorController = TextEditingController(
-      text: receita == null ? '0,00' : formatarCampoValor(receita.valorCentavos),
+      text: receita == null
+          ? '0,00'
+          : FormatadorMoeda.formatarCampo(receita.valorCentavos),
     );
     _descricaoController = TextEditingController(
       text: receita == null || receita.descricao == receita.categoria
           ? ''
           : receita.descricao,
     );
-    _categoria = receita?.categoria;
-    _data = receita?.data ?? DateTime(2026, 10, 18);
-    _mostrarChips = receita != null &&
-        !DadosDemonstracao.categoriasReceita
-            .any((c) => c.nome == receita.categoria);
+    _categoriaSelecionada = receita?.categoria;
+    _data = receita?.data ?? DateTime.now();
+    widget.controller.addListener(_aoMudarController);
+    widget.controller.carregarCategorias();
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_aoMudarController);
     _valorController.dispose();
     _descricaoController.dispose();
     super.dispose();
+  }
+
+  void _aoMudarController() {
+    if (mounted) setState(() {});
+  }
+
+  List<CategoriaFinanceira> get _opcoes {
+    return widget.controller.categoriasReceita
+        .map(
+          (categoria) => CategoriaFinanceira(
+            nome: categoria.nome,
+            icone: iconeParaCategoria(categoria.nome),
+            cor: AppColors.primary,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Categoria? get _categoriaEntidade {
+    final nome = _categoriaSelecionada;
+    if (nome == null) return null;
+    for (final categoria in widget.controller.categoriasReceita) {
+      if (categoria.nome == nome) return categoria;
+    }
+    return null;
   }
 
   Future<void> _selecionarData() async {
@@ -84,46 +114,47 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
     final novaCategoria = await mostrarModalNovaCategoria(
       context,
       tipo: TipoTransacao.receita,
-      valorInicial: 'Consultoria',
+      aoSalvarCustomizado: (nome) =>
+          widget.controller.criarCategoria(nome, TipoTransacao.receita),
     );
-    if (novaCategoria == null || novaCategoria.nome.isEmpty) return;
-    widget.controller.adicionarCategoriaReceita(novaCategoria.nome);
     if (!mounted) return;
+    if (novaCategoria == null) {
+      final erro = widget.controller.mensagemErro;
+      if (erro != null) _aviso(erro);
+      return;
+    }
     setState(() {
-      _categoria = novaCategoria.nome;
+      _categoriaSelecionada = novaCategoria.nome;
       _mostrarChips = true;
     });
   }
 
-  void _salvar() {
+  Future<void> _salvar() async {
     FocusScope.of(context).unfocus();
-    final valor = parseValorParaCentavos(_valorController.text);
-    if (valor <= 0) {
+
+    final valorCentavos =
+        FormatadorMoeda.converterTextoParaCentavos(_valorController.text);
+    if (valorCentavos <= 0) {
       _aviso('Informe o valor recebido.');
       return;
     }
-    if (_categoria == null || _categoria!.isEmpty) {
+
+    final categoria = _categoriaEntidade;
+    if (categoria == null) {
       _aviso('Selecione o tipo de receita.');
       return;
     }
 
-    if (_editando) {
-      widget.controller.editarReceita(
-        widget.receita!,
-        descricao: _descricaoController.text.trim(),
-        categoria: _categoria!,
-        valorCentavos: valor,
-        data: _data,
-      );
-    } else {
-      widget.controller.adicionarReceita(
-        descricao: _descricaoController.text.trim(),
-        categoria: _categoria!,
-        valorCentavos: valor,
-        data: _data,
-      );
-    }
-    Navigator.of(context).pop();
+    final sucesso = await widget.controller.salvarReceita(
+      existente: widget.receita,
+      descricao: _descricaoController.text.trim(),
+      categoria: categoria,
+      valorFormatado: _valorController.text,
+      data: _data,
+    );
+
+    if (!mounted || sucesso) return;
+    _aviso(widget.controller.mensagemErro ?? 'Não foi possível salvar a receita.');
   }
 
   void _aviso(String mensagem) {
@@ -157,18 +188,18 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
               const FormLabel('Tipo de receita'),
               AppDropdownField(
                 hint: 'Selecione o tipo de receita',
-                value: _categoria,
-                options: widget.controller.categoriasReceita,
+                value: _categoriaSelecionada,
+                options: _opcoes,
                 onSelected: (categoria) {
-                  setState(() => _categoria = categoria.nome);
+                  setState(() => _categoriaSelecionada = categoria.nome);
                 },
                 onCreate: _criarCategoria,
               ),
               if (_mostrarChips) ...[
                 const SizedBox(height: 13),
                 CategoryConfirmationChips(
-                  categorias: widget.controller.categoriasReceita,
-                  selecionada: _categoria ?? '',
+                  categorias: _opcoes,
+                  selecionada: _categoriaSelecionada ?? '',
                 ),
               ],
               const SizedBox(height: 20),
@@ -180,23 +211,32 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
               const SizedBox(height: 19),
               const FormLabel('Data do recebimento'),
               DateField(
-                value: formatarDataCurta(_data),
+                value: FormatadorMoeda.formatarDataCurta(_data),
                 onTap: _selecionarData,
               ),
               const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _salvar,
-                  child: Text(
-                    _editando ? 'SALVAR ALTERAÇÕES' : 'Salvar receita',
-                    style: const TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
+                  onPressed: widget.controller.salvando ? null : _salvar,
+                  child: widget.controller.salvando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _editando ? 'SALVAR ALTERAÇÕES' : 'Salvar receita',
+                          style: const TextStyle(
+                            fontFamily: 'PlusJakartaSans',
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
                 ),
               ),
             ],

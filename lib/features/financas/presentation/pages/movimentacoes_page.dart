@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navegacao/rotas_app.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
 import '../../../../core/widgets/meubolso_logo.dart';
-import '../../data/dados_demonstracao.dart';
-import '../../domain/models/movimentacao.dart';
-import '../controllers/financas_controller.dart';
+import '../../../transacoes/domain/entities/transacao.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import '../widgets/finance_widgets.dart';
 import '../widgets/form_widgets.dart';
 import '../widgets/meubolso_bottom_nav.dart';
 import '../widgets/report_widgets.dart';
-import 'despesa_form_page.dart';
-import 'receita_form_page.dart';
 
 class MovimentacoesPage extends StatefulWidget {
-  final FinancasController controller;
+  final TransacoesController controller;
   final ValueChanged<int> onAbaSelecionada;
 
   const MovimentacoesPage({
@@ -29,39 +29,37 @@ class MovimentacoesPage extends StatefulWidget {
 class _MovimentacoesPageState extends State<MovimentacoesPage> {
   String _filtro = 'Todas';
 
-  Future<void> _editar(Movimentacao movimentacao) async {
-    if (movimentacao.tipo.isReceita) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ReceitaFormPage(
-            controller: widget.controller,
-            receita: movimentacao,
-          ),
-        ),
-      );
-    } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => DespesaFormPage(
-            controller: widget.controller,
-            despesa: movimentacao,
-          ),
-        ),
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.carregar();
   }
 
-  Future<void> _excluir(Movimentacao movimentacao) async {
-    final isReceita = movimentacao.tipo.isReceita;
-    final confirmou = isReceita
+  Future<void> _editar(Transacao transacao) async {
+    final rota = transacao.isReceita
+        ? RotasApp.receitaForm
+        : RotasApp.despesaForm;
+    await Navigator.of(context).pushNamed(rota, arguments: transacao);
+  }
+
+  Future<void> _excluir(Transacao transacao) async {
+    final confirmou = transacao.isReceita
         ? await mostrarDialogoExcluirReceita(context)
         : await mostrarDialogoExcluirDespesa(context);
     if (!confirmou || !mounted) return;
 
-    if (isReceita) {
-      widget.controller.excluirReceita(movimentacao);
-    } else {
-      widget.controller.excluirDespesa(movimentacao);
+    final sucesso = await widget.controller.excluir(transacao);
+    if (!mounted) return;
+
+    if (!sucesso) {
+      final erro = widget.controller.mensagemErro;
+      if (erro != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(erro)),
+        );
+        widget.controller.limparErro();
+      }
+      return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -69,13 +67,7 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
         content: const Text('Movimentação excluída.'),
         action: SnackBarAction(
           label: 'Desfazer',
-          onPressed: () {
-            if (isReceita) {
-              widget.controller.desfazerExclusaoReceita();
-            } else {
-              widget.controller.desfazerExclusaoDespesa();
-            }
-          },
+          onPressed: widget.controller.restaurarUltimaExclusao,
         ),
       ),
     );
@@ -86,10 +78,10 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
-        final relatorio = widget.controller.relatorio;
-        final movimentacoes = relatorio.movimentacoes.where((m) {
-          if (_filtro == 'Receitas') return m.tipo.isReceita;
-          if (_filtro == 'Despesas') return !m.tipo.isReceita;
+        final controller = widget.controller;
+        final movimentacoes = controller.transacoes.where((m) {
+          if (_filtro == 'Receitas') return m.isReceita;
+          if (_filtro == 'Despesas') return m.isDespesa;
           return true;
         }).toList();
 
@@ -144,7 +136,7 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
                                 color: AppColors.textHeading,
                               ),
                             ),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
                             Text(
                               'Todas as movimentações do período',
                               style: TextStyle(
@@ -177,7 +169,9 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
                         const SizedBox(width: 9),
                         Expanded(
                           child: Text(
-                            relatorio.tituloPeriodo,
+                            FormatadorMoeda.formatarMesAno(
+                              controller.mesReferencia,
+                            ),
                             style: TextStyle(
                               fontFamily: 'PlusJakartaSans',
                               fontSize: 11,
@@ -213,10 +207,12 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
                         const SizedBox(height: 8),
                         if (movimentacoes.isEmpty)
                           Padding(
-                            padding: EdgeInsets.symmetric(vertical: 36),
+                            padding: const EdgeInsets.symmetric(vertical: 36),
                             child: Center(
                               child: Text(
-                                'Nenhuma movimentação neste filtro.',
+                                controller.carregando
+                                    ? 'Carregando movimentações...'
+                                    : 'Nenhuma movimentação neste filtro.',
                                 style: TextStyle(
                                   fontFamily: 'PlusJakartaSans',
                                   fontSize: 11,
@@ -230,17 +226,17 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
                             TransactionTile(
                               title: movimentacoes[i].descricao,
                               subtitle:
-                                  '${movimentacoes[i].categoria} • ${formatarDataCurta(movimentacoes[i].data)}',
-                              value: formatarMoeda(
-                                movimentacoes[i].tipo.isReceita
+                                  '${movimentacoes[i].categoria} • ${FormatadorMoeda.formatarDataCurta(movimentacoes[i].data)}',
+                              value: FormatadorMoeda.formatar(
+                                movimentacoes[i].isReceita
                                     ? movimentacoes[i].valorCentavos
                                     : -movimentacoes[i].valorCentavos,
                                 comSinal: true,
                               ),
-                              icon: DadosDemonstracao.iconeCategoria(
+                              icon: iconeParaCategoria(
                                 movimentacoes[i].categoria,
                               ),
-                              isExpense: !movimentacoes[i].tipo.isReceita,
+                              isExpense: movimentacoes[i].isDespesa,
                               showDivider: i < movimentacoes.length - 1,
                               showTypeLabel: true,
                               padding: const EdgeInsets.fromLTRB(0, 11, 0, 11),
@@ -277,7 +273,10 @@ class _MovimentacoesPageState extends State<MovimentacoesPage> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Resumo financeiro do período: receitas de ${formatarMoeda(relatorio.totalReceitasCentavos)} e despesas de ${formatarMoeda(relatorio.totalDespesasCentavos)}.',
+                    'Resumo financeiro do período: receitas de '
+                    '${FormatadorMoeda.formatar(controller.totalReceitasCentavos)} '
+                    'e despesas de '
+                    '${FormatadorMoeda.formatar(controller.totalDespesasCentavos)}.',
                     style: TextStyle(
                       fontFamily: 'PlusJakartaSans',
                       fontSize: 9.5,

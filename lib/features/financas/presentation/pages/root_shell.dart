@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navegacao/rotas_app.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
-import '../controllers/financas_controller.dart';
+import '../../../relatorios/presentation/controllers/relatorio_controller.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import 'despesas_page.dart';
-import 'movimentacoes_page.dart';
-import 'receitas_page.dart';
 import 'relatorios_page.dart';
 
 class RootShell extends StatefulWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final DashboardController dashboardController;
+  final TransacoesController transacoesController;
+  final RelatorioController relatorioController;
+  final int abaInicial;
 
   const RootShell({
     super.key,
     this.themeMode = ThemeMode.system,
     this.onThemeModeChanged,
     required this.dashboardController,
+    required this.transacoesController,
+    required this.relatorioController,
+    this.abaInicial = 0,
   });
 
   @override
@@ -26,36 +32,35 @@ class RootShell extends StatefulWidget {
 }
 
 class _RootShellState extends State<RootShell> {
-  final FinancasController _controller = FinancasController();
-  int _aba = 0;
+  late final int _aba = widget.abaInicial;
 
   void _selecionarAba(int indice) {
     if (indice == 3) {
       _abrirMais();
       return;
     }
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() => _aba = indice);
+    _irParaRota(_rotaDaAba(indice));
   }
 
-  void _voltarAoInicio() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    if (_aba != 0) {
-      setState(() => _aba = 0);
+  void _voltarAoInicio() => _irParaRota(RotasApp.inicio);
+
+  void _irParaRota(String rota) {
+    Navigator.of(context).pushNamedAndRemoveUntil(rota, (route) => false);
+  }
+
+  String _rotaDaAba(int indice) {
+    switch (indice) {
+      case 1:
+        return RotasApp.transacoes;
+      case 2:
+        return RotasApp.relatorios;
+      default:
+        return RotasApp.inicio;
     }
   }
 
   void _abrirMovimentacoes() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() => _aba = 0);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MovimentacoesPage(
-          controller: _controller,
-          onAbaSelecionada: _selecionarAba,
-        ),
-      ),
-    );
+    Navigator.of(context).pushNamed(RotasApp.movimentacoes);
   }
 
   Future<void> _abrirMais() async {
@@ -122,17 +127,7 @@ class _RootShellState extends State<RootShell> {
                         descricao: 'Veja e gerencie suas entradas',
                         onTap: () {
                           Navigator.of(sheetContext).pop();
-                          Navigator.of(context)
-                              .popUntil((route) => route.isFirst);
-                          setState(() => _aba = 0);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ReceitasPage(
-                                controller: _controller,
-                                onAbaSelecionada: _selecionarAba,
-                              ),
-                            ),
-                          );
+                          Navigator.of(context).pushNamed(RotasApp.receitas);
                         },
                       ),
                       const SizedBox(height: 10),
@@ -202,13 +197,13 @@ class _RootShellState extends State<RootShell> {
     switch (_aba) {
       case 1:
         return DespesasPage(
-          controller: _controller,
+          controller: widget.transacoesController,
           onAbaSelecionada: _selecionarAba,
           onAbrirMovimentacoes: _abrirMovimentacoes,
         );
       case 2:
         return RelatoriosPage(
-          controller: _controller,
+          controller: widget.relatorioController,
           onAbaSelecionada: _selecionarAba,
         );
       default:

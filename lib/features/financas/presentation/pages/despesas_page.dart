@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navegacao/rotas_app.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../data/dados_demonstracao.dart';
-import '../../domain/models/movimentacao.dart';
-import '../controllers/financas_controller.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
+import '../../../transacoes/domain/entities/transacao.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import '../widgets/app_header.dart';
 import '../widgets/finance_widgets.dart';
 import '../widgets/form_widgets.dart';
 import '../widgets/meubolso_bottom_nav.dart';
-import 'despesa_form_page.dart';
 
-class DespesasPage extends StatelessWidget {
-  final FinancasController controller;
+class DespesasPage extends StatefulWidget {
+  final TransacoesController controller;
   final ValueChanged<int> onAbaSelecionada;
   final VoidCallback onAbrirMovimentacoes;
 
@@ -22,47 +23,69 @@ class DespesasPage extends StatelessWidget {
     required this.onAbrirMovimentacoes,
   });
 
-  Future<void> _abrirFormulario(
-    BuildContext context, {
-    Movimentacao? despesa,
-  }) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DespesaFormPage(
-          controller: controller,
-          despesa: despesa,
-        ),
-      ),
+  @override
+  State<DespesasPage> createState() => _DespesasPageState();
+}
+
+class _DespesasPageState extends State<DespesasPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.carregar();
+  }
+
+  Future<void> _abrirFormulario({Transacao? despesa}) async {
+    await Navigator.of(context).pushNamed(
+      RotasApp.despesaForm,
+      arguments: despesa,
     );
   }
 
-  Future<void> _excluir(BuildContext context, Movimentacao despesa) async {
+  Future<void> _excluir(Transacao despesa) async {
     final confirmado = await mostrarDialogoExcluirDespesa(context);
-    if (!confirmado) return;
-    controller.excluirDespesa(despesa);
-    if (!context.mounted) return;
+    if (!confirmado || !mounted) return;
+
+    final sucesso = await widget.controller.excluir(despesa);
+    if (!mounted) return;
+
+    if (!sucesso) {
+      _mostrarErro(widget.controller.mensagemErro);
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Despesa excluída.'),
         action: SnackBarAction(
           label: 'Desfazer',
           textColor: Colors.white,
-          onPressed: controller.desfazerExclusaoDespesa,
+          onPressed: widget.controller.restaurarUltimaExclusao,
         ),
       ),
     );
   }
 
+  void _mostrarErro(String? mensagem) {
+    if (mensagem == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensagem)),
+    );
+    widget.controller.limparErro();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
+      animation: widget.controller,
       builder: (context, _) {
+        final controller = widget.controller;
+        final despesas = controller.despesas;
+
         return Scaffold(
           backgroundColor: AppColors.background,
           bottomNavigationBar: MeuBolsoBottomNav(
             selectedIndex: 1,
-            onSelected: onAbaSelecionada,
+            onSelected: widget.onAbaSelecionada,
           ),
           body: SafeArea(
             bottom: false,
@@ -76,11 +99,21 @@ class DespesasPage extends StatelessWidget {
                     title: 'Minhas despesas',
                     subtitle: 'Veja para onde seu dinheiro vai',
                   ),
-                  const MonthSelector(label: 'Outubro 2026'),
+                  MonthSelector(
+                    label: FormatadorMoeda.formatarMesAno(
+                      controller.mesReferencia,
+                    ),
+                  ),
+                  if (controller.carregando) ...[
+                    const SizedBox(height: 12),
+                    const LinearProgressIndicator(minHeight: 3),
+                  ],
                   const SizedBox(height: 16),
                   PrimaryBalanceCard(
                     label: 'Total gasto no mês',
-                    value: formatarMoeda(controller.totalDespesasCentavos),
+                    value: FormatadorMoeda.formatar(
+                      controller.totalDespesasCentavos,
+                    ),
                     illustration: Container(
                       width: 35,
                       height: 35,
@@ -99,25 +132,31 @@ class DespesasPage extends StatelessWidget {
                   const SectionHeader(title: 'Despesas registradas'),
                   SurfaceCard(
                     padding: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < controller.despesas.length; i++)
-                          TransactionTile(
-                            title: controller.despesas[i].descricao,
-                            subtitle: formatarDataAbreviada(
-                              controller.despesas[i].data,
-                            ),
-                            value: formatarMoeda(
-                              -controller.despesas[i].valorCentavos,
-                            ),
-                            icon: DadosDemonstracao.iconeDespesa(
-                              controller.despesas[i].descricao,
-                            ),
-                            isExpense: true,
-                            showDivider: i < controller.despesas.length - 1,
-                            padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-                            trailing: controller.mostrarAcoesDespesas
-                                ? PopupMenuButton<String>(
+                    child: despesas.isEmpty
+                        ? _MensagemVazia(
+                            texto: controller.carregando
+                                ? 'Carregando despesas...'
+                                : 'Nenhuma despesa registrada neste mês.',
+                          )
+                        : Column(
+                            children: [
+                              for (var i = 0; i < despesas.length; i++)
+                                TransactionTile(
+                                  title: despesas[i].descricao,
+                                  subtitle: FormatadorMoeda.formatarDataAbreviada(
+                                    despesas[i].data,
+                                  ),
+                                  value: FormatadorMoeda.formatar(
+                                    -despesas[i].valorCentavos,
+                                  ),
+                                  icon: iconeParaCategoria(
+                                    despesas[i].categoria,
+                                  ),
+                                  isExpense: true,
+                                  showDivider: i < despesas.length - 1,
+                                  padding:
+                                      const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                                  trailing: PopupMenuButton<String>(
                                     padding: EdgeInsets.zero,
                                     iconSize: 18,
                                     color: AppColors.surface,
@@ -135,14 +174,10 @@ class DespesasPage extends StatelessWidget {
                                     onSelected: (opcao) {
                                       if (opcao == 'editar') {
                                         _abrirFormulario(
-                                          context,
-                                          despesa: controller.despesas[i],
+                                          despesa: despesas[i],
                                         );
                                       } else {
-                                        _excluir(
-                                          context,
-                                          controller.despesas[i],
-                                        );
+                                        _excluir(despesas[i]);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -209,17 +244,16 @@ class DespesasPage extends StatelessWidget {
                                         ),
                                       ),
                                     ],
-                                  )
-                                : null,
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 12),
                   InkWell(
-                    onTap: onAbrirMovimentacoes,
+                    onTap: widget.onAbrirMovimentacoes,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
                           Text(
@@ -243,7 +277,7 @@ class DespesasPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   PillButton(
                     label: '+ Adicionar despesa',
-                    onTap: () => _abrirFormulario(context),
+                    onTap: _abrirFormulario,
                   ),
                 ],
               ),
@@ -251,6 +285,29 @@ class DespesasPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MensagemVazia extends StatelessWidget {
+  final String texto;
+
+  const _MensagemVazia({required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: Center(
+        child: Text(
+          texto,
+          style: TextStyle(
+            fontFamily: 'PlusJakartaSans',
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

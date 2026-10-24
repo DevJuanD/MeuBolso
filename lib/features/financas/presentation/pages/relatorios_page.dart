@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navegacao/rotas_app.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
 import '../../../../core/widgets/meubolso_logo.dart';
-import '../../data/dados_demonstracao.dart';
-import '../../domain/models/movimentacao.dart';
+import '../../../relatorios/presentation/controllers/relatorio_controller.dart';
 import '../../domain/models/relatorio.dart';
-import '../controllers/financas_controller.dart';
 import '../widgets/finance_widgets.dart';
 import '../widgets/financial_chart.dart';
 import '../widgets/meubolso_bottom_nav.dart';
 import '../widgets/report_widgets.dart';
 import 'filtros_relatorio_page.dart';
-import 'movimentacoes_page.dart';
 
 class RelatoriosPage extends StatefulWidget {
-  final FinancasController controller;
+  final RelatorioController controller;
   final ValueChanged<int> onAbaSelecionada;
 
   const RelatoriosPage({
@@ -30,6 +30,12 @@ class RelatoriosPage extends StatefulWidget {
 class _RelatoriosPageState extends State<RelatoriosPage> {
   String _filtroMovimentacoes = 'Todas';
 
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.carregar();
+  }
+
   void _abrirFiltros() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -42,14 +48,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
   }
 
   void _abrirMovimentacoes() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MovimentacoesPage(
-          controller: widget.controller,
-          onAbaSelecionada: widget.onAbaSelecionada,
-        ),
-      ),
-    );
+    Navigator.of(context).pushNamed(RotasApp.movimentacoes);
   }
 
   @override
@@ -57,8 +56,21 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
-        final relatorio = widget.controller.relatorio;
+        final relatorio = widget.controller.conteudoRelatorio;
         final filtro = widget.controller.filtro;
+
+        if (widget.controller.carregando &&
+            widget.controller.totais == null) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            bottomNavigationBar: MeuBolsoBottomNav(
+              selectedIndex: 2,
+              onSelected: widget.onAbaSelecionada,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
         return Scaffold(
           backgroundColor: AppColors.background,
           bottomNavigationBar: MeuBolsoBottomNav(
@@ -72,6 +84,10 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (widget.controller.carregando) ...[
+                    const LinearProgressIndicator(minHeight: 3),
+                    const SizedBox(height: 10),
+                  ],
                   Row(
                     children: [
                       const MeuBolsoLogo(),
@@ -192,7 +208,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                       Expanded(
                         child: ReportMetricCard(
                           label: 'Total de receitas',
-                          value: formatarMoeda(relatorio.totalReceitasCentavos),
+                          value: FormatadorMoeda.formatar(relatorio.totalReceitasCentavos),
                           icon: Icons.arrow_downward_rounded,
                           positive: true,
                         ),
@@ -201,7 +217,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                       Expanded(
                         child: ReportMetricCard(
                           label: 'Total de despesas',
-                          value: formatarMoeda(relatorio.totalDespesasCentavos),
+                          value: FormatadorMoeda.formatar(relatorio.totalDespesasCentavos),
                           icon: Icons.arrow_upward_rounded,
                           positive: false,
                         ),
@@ -210,7 +226,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                   ),
                   const SizedBox(height: 10),
                   ReportBalanceCard(
-                    value: formatarMoeda(relatorio.saldoCentavos),
+                    value: FormatadorMoeda.formatar(relatorio.saldoCentavos),
                     helper:
                         'Receitas − despesas. Não é o saldo bancário real.',
                   ),
@@ -472,16 +488,14 @@ class _MovementsPanel extends StatelessWidget {
               TransactionTile(
                 title: filtradas[i].descricao,
                 subtitle:
-                    '${filtradas[i].categoria} • ${formatarDataCurta(filtradas[i].data)}',
-                value: formatarMoeda(
+                    '${filtradas[i].categoria} • ${FormatadorMoeda.formatarDataCurta(filtradas[i].data)}',
+                value: FormatadorMoeda.formatar(
                   filtradas[i].tipo.isReceita
                       ? filtradas[i].valorCentavos
                       : -filtradas[i].valorCentavos,
                   comSinal: true,
                 ),
-                icon: DadosDemonstracao.iconeCategoria(
-                  filtradas[i].categoria,
-                ),
+                icon: iconeParaCategoria(filtradas[i].categoria),
                 isExpense: !filtradas[i].tipo.isReceita,
                 showDivider: i < filtradas.length - 1,
                 showTypeLabel: true,

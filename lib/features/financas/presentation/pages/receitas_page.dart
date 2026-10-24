@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navegacao/rotas_app.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../data/dados_demonstracao.dart';
-import '../../domain/models/movimentacao.dart';
-import '../controllers/financas_controller.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
+import '../../../transacoes/domain/entities/transacao.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import '../widgets/app_header.dart';
 import '../widgets/finance_widgets.dart';
 import '../widgets/form_widgets.dart';
 import '../widgets/meubolso_bottom_nav.dart';
-import 'receita_form_page.dart';
 
-class ReceitasPage extends StatelessWidget {
-  final FinancasController controller;
+class ReceitasPage extends StatefulWidget {
+  final TransacoesController controller;
   final ValueChanged<int> onAbaSelecionada;
 
   const ReceitasPage({
@@ -20,47 +21,69 @@ class ReceitasPage extends StatelessWidget {
     required this.onAbaSelecionada,
   });
 
-  Future<void> _abrirFormulario(
-    BuildContext context, {
-    Movimentacao? receita,
-  }) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ReceitaFormPage(
-          controller: controller,
-          receita: receita,
-        ),
-      ),
+  @override
+  State<ReceitasPage> createState() => _ReceitasPageState();
+}
+
+class _ReceitasPageState extends State<ReceitasPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.carregar();
+  }
+
+  Future<void> _abrirFormulario({Transacao? receita}) async {
+    await Navigator.of(context).pushNamed(
+      RotasApp.receitaForm,
+      arguments: receita,
     );
   }
 
-  Future<void> _excluir(BuildContext context, Movimentacao receita) async {
+  Future<void> _excluir(Transacao receita) async {
     final confirmado = await mostrarDialogoExcluirReceita(context);
-    if (!confirmado) return;
-    controller.excluirReceita(receita);
-    if (!context.mounted) return;
+    if (!confirmado || !mounted) return;
+
+    final sucesso = await widget.controller.excluir(receita);
+    if (!mounted) return;
+
+    if (!sucesso) {
+      _mostrarErro(widget.controller.mensagemErro);
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Receita excluída.'),
         action: SnackBarAction(
           label: 'Desfazer',
           textColor: Colors.white,
-          onPressed: controller.desfazerExclusaoReceita,
+          onPressed: widget.controller.restaurarUltimaExclusao,
         ),
       ),
     );
   }
 
+  void _mostrarErro(String? mensagem) {
+    if (mensagem == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensagem)),
+    );
+    widget.controller.limparErro();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
+      animation: widget.controller,
       builder: (context, _) {
+        final controller = widget.controller;
+        final receitas = controller.receitas;
+
         return Scaffold(
           backgroundColor: AppColors.background,
           bottomNavigationBar: MeuBolsoBottomNav(
             selectedIndex: 0,
-            onSelected: onAbaSelecionada,
+            onSelected: widget.onAbaSelecionada,
           ),
           body: SafeArea(
             bottom: false,
@@ -74,11 +97,21 @@ class ReceitasPage extends StatelessWidget {
                     title: 'Minhas receitas',
                     subtitle: 'Veja o dinheiro que entrou',
                   ),
-                  const MonthSelector(label: 'Outubro 2026'),
+                  MonthSelector(
+                    label: FormatadorMoeda.formatarMesAno(
+                      controller.mesReferencia,
+                    ),
+                  ),
+                  if (controller.carregando) ...[
+                    const SizedBox(height: 12),
+                    const LinearProgressIndicator(minHeight: 3),
+                  ],
                   const SizedBox(height: 16),
                   PrimaryBalanceCard(
                     label: 'Total recebido no mês',
-                    value: formatarMoeda(controller.totalReceitasCentavos),
+                    value: FormatadorMoeda.formatar(
+                      controller.totalReceitasCentavos,
+                    ),
                     illustration: Container(
                       width: 35,
                       height: 35,
@@ -97,25 +130,31 @@ class ReceitasPage extends StatelessWidget {
                   const SectionHeader(title: 'Receitas recebidas'),
                   SurfaceCard(
                     padding: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < controller.receitas.length; i++)
-                          TransactionTile(
-                            title: controller.receitas[i].descricao,
-                            subtitle: formatarDataAbreviada(
-                              controller.receitas[i].data,
-                            ),
-                            value: formatarMoeda(
-                              controller.receitas[i].valorCentavos,
-                            ),
-                            icon: DadosDemonstracao.iconeReceita(
-                              controller.receitas[i].categoria,
-                            ),
-                            isExpense: false,
-                            showDivider: i < controller.receitas.length - 1,
-                            padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-                            trailing: controller.mostrarAcoesReceitas
-                                ? PopupMenuButton<String>(
+                    child: receitas.isEmpty
+                        ? _MensagemVazia(
+                            texto: controller.carregando
+                                ? 'Carregando receitas...'
+                                : 'Nenhuma receita registrada neste mês.',
+                          )
+                        : Column(
+                            children: [
+                              for (var i = 0; i < receitas.length; i++)
+                                TransactionTile(
+                                  title: receitas[i].descricao,
+                                  subtitle: FormatadorMoeda.formatarDataAbreviada(
+                                    receitas[i].data,
+                                  ),
+                                  value: FormatadorMoeda.formatar(
+                                    receitas[i].valorCentavos,
+                                  ),
+                                  icon: iconeParaCategoria(
+                                    receitas[i].categoria,
+                                  ),
+                                  isExpense: false,
+                                  showDivider: i < receitas.length - 1,
+                                  padding:
+                                      const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                                  trailing: PopupMenuButton<String>(
                                     padding: EdgeInsets.zero,
                                     iconSize: 18,
                                     color: AppColors.surface,
@@ -133,14 +172,10 @@ class ReceitasPage extends StatelessWidget {
                                     onSelected: (opcao) {
                                       if (opcao == 'editar') {
                                         _abrirFormulario(
-                                          context,
-                                          receita: controller.receitas[i],
+                                          receita: receitas[i],
                                         );
                                       } else {
-                                        _excluir(
-                                          context,
-                                          controller.receitas[i],
-                                        );
+                                        _excluir(receitas[i]);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -171,16 +206,15 @@ class ReceitasPage extends StatelessWidget {
                                         ),
                                       ),
                                     ],
-                                  )
-                                : null,
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 22),
                   PillButton(
                     label: '+ Adicionar receita',
-                    onTap: () => _abrirFormulario(context),
+                    onTap: _abrirFormulario,
                   ),
                 ],
               ),
@@ -188,6 +222,29 @@ class ReceitasPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MensagemVazia extends StatelessWidget {
+  final String texto;
+
+  const _MensagemVazia({required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: Center(
+        child: Text(
+          texto,
+          style: TextStyle(
+            fontFamily: 'PlusJakartaSans',
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

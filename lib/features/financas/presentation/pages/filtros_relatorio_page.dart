@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatador_moeda.dart';
 import '../../../../core/widgets/meubolso_logo.dart';
-import '../../data/dados_demonstracao.dart';
+import '../../../relatorios/presentation/controllers/relatorio_controller.dart';
 import '../../domain/models/movimentacao.dart';
 import '../../domain/models/relatorio.dart';
-import '../controllers/financas_controller.dart';
 import '../widgets/meubolso_bottom_nav.dart';
 import '../widgets/report_widgets.dart';
 
 class FiltrosRelatorioPage extends StatefulWidget {
-  final FinancasController controller;
+  final RelatorioController controller;
   final ValueChanged<int> onAbaSelecionada;
 
   const FiltrosRelatorioPage({
@@ -42,24 +42,27 @@ class _FiltrosRelatorioPageState extends State<FiltrosRelatorioPage> {
   }
 
   void _selecionarPeriodo(PeriodoRelatorio periodo) {
+    final agora = DateTime.now();
+    final inicioMesAtual = DateTime(agora.year, agora.month);
+
     setState(() {
       _periodo = periodo;
       switch (periodo) {
         case PeriodoRelatorio.esteMes:
-          _dataInicial = DateTime(2025, 10, 1);
-          _dataFinal = DateTime(2025, 10, 31);
+          _dataInicial = inicioMesAtual;
+          _dataFinal = DateTime(agora.year, agora.month + 1, 0);
         case PeriodoRelatorio.ultimoMes:
-          _dataInicial = DateTime(2025, 9, 1);
-          _dataFinal = DateTime(2025, 9, 30);
+          _dataInicial = DateTime(agora.year, agora.month - 1);
+          _dataFinal = DateTime(agora.year, agora.month, 0);
         case PeriodoRelatorio.ultimos3Meses:
-          _dataInicial = DateTime(2025, 8, 1);
-          _dataFinal = DateTime(2025, 10, 31);
+          _dataInicial = DateTime(agora.year, agora.month - 2);
+          _dataFinal = DateTime(agora.year, agora.month + 1, 0);
         case PeriodoRelatorio.ultimos6Meses:
-          _dataInicial = DateTime(2025, 5, 1);
-          _dataFinal = DateTime(2025, 10, 31);
+          _dataInicial = DateTime(agora.year, agora.month - 5);
+          _dataFinal = DateTime(agora.year, agora.month + 1, 0);
         case PeriodoRelatorio.esteAno:
-          _dataInicial = DateTime(2025, 1, 1);
-          _dataFinal = DateTime(2025, 10, 31);
+          _dataInicial = DateTime(agora.year);
+          _dataFinal = DateTime(agora.year, agora.month + 1, 0);
         case PeriodoRelatorio.personalizado:
           break;
       }
@@ -67,19 +70,20 @@ class _FiltrosRelatorioPageState extends State<FiltrosRelatorioPage> {
   }
 
   String get _referencia {
+    final referencia =
+        '${FormatadorMoeda.formatarMesAno(_dataInicial)} a '
+        '${FormatadorMoeda.formatarMesAno(_dataFinal)}';
     switch (_periodo) {
       case PeriodoRelatorio.esteMes:
-        return 'Outubro 2025 • mês de referência deste relatório';
+        return '${FormatadorMoeda.formatarMesAno(_dataInicial)} • mês de referência deste relatório';
       case PeriodoRelatorio.ultimoMes:
-        return 'Setembro 2025 • mês de referência deste relatório';
+        return '${FormatadorMoeda.formatarMesAno(_dataInicial)} • mês de referência deste relatório';
       case PeriodoRelatorio.ultimos3Meses:
-        return 'Ago–Out 2025 • período de referência deste relatório';
       case PeriodoRelatorio.ultimos6Meses:
-        return 'Mai–Out 2025 • período de referência deste relatório';
       case PeriodoRelatorio.esteAno:
-        return 'Jan–Out 2025 • período de referência deste relatório';
+        return '$referencia • período de referência deste relatório';
       case PeriodoRelatorio.personalizado:
-        return '${formatarDataCurta(_dataInicial)} a ${formatarDataCurta(_dataFinal)}';
+        return '${FormatadorMoeda.formatarDataCurta(_dataInicial)} a ${FormatadorMoeda.formatarDataCurta(_dataFinal)}';
     }
   }
 
@@ -112,8 +116,8 @@ class _FiltrosRelatorioPageState extends State<FiltrosRelatorioPage> {
     });
   }
 
-  void _aplicar() {
-    widget.controller.aplicarFiltro(
+  Future<void> _aplicar() async {
+    await widget.controller.aplicarFiltros(
       FiltroRelatorio(
         periodo: _periodo,
         dataInicial: _dataInicial,
@@ -122,18 +126,20 @@ class _FiltrosRelatorioPageState extends State<FiltrosRelatorioPage> {
         categoria: _categoria,
       ),
     );
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
-  void _limpar() {
+  Future<void> _limpar() async {
+    final agora = DateTime.now();
     setState(() {
       _periodo = PeriodoRelatorio.esteMes;
-      _dataInicial = DateTime(2025, 10, 1);
-      _dataFinal = DateTime(2025, 10, 31);
+      _dataInicial = DateTime(agora.year, agora.month);
+      _dataFinal = DateTime(agora.year, agora.month + 1, 0);
       _tipo = TipoFiltroRelatorio.todas;
       _categoria = 'Todas as categorias';
     });
-    widget.controller.limparFiltros();
+    await widget.controller.limparFiltros();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Filtros limpos.')),
     );
@@ -360,8 +366,9 @@ class _FiltrosRelatorioPageState extends State<FiltrosRelatorioPage> {
                             () => _categoria = 'Todas as categorias',
                           ),
                         ),
-                        for (final categoria
-                            in DadosDemonstracao.categoriasRelatorio)
+                        for (final categoria in widget
+                            .controller.categoriasDisponiveis
+                            .where((c) => c != 'Todas as categorias'))
                           FilterChoice(
                             label: categoria,
                             selected: _categoria == categoria,

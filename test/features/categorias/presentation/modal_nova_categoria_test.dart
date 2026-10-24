@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_bolso/core/theme/app_colors.dart';
 import 'package:meu_bolso/core/theme/app_theme.dart';
 import 'package:meu_bolso/features/categorias/domain/entities/categoria.dart';
-import 'package:meu_bolso/features/categorias/domain/exceptions/falhas_categoria.dart';
 import 'package:meu_bolso/features/categorias/domain/repositories/categoria_repository.dart';
 import 'package:meu_bolso/features/categorias/domain/usecases/criar_categoria_usecase.dart';
 import 'package:meu_bolso/features/categorias/presentation/widgets/modal_nova_categoria.dart';

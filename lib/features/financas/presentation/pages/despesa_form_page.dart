@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatador_moeda.dart';
+import '../../../../core/utils/icone_categoria.dart';
+import '../../../categorias/domain/entities/categoria.dart';
 import '../../../core/domain/enums/tipo_transacao.dart';
-import '../../data/dados_demonstracao.dart';
+import '../../../transacoes/domain/entities/transacao.dart';
+import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
 import '../../domain/models/movimentacao.dart';
-import '../controllers/financas_controller.dart';
 import '../widgets/app_header.dart';
 import '../widgets/form_widgets.dart';
 
 class DespesaFormPage extends StatefulWidget {
-  final FinancasController controller;
-  final Movimentacao? despesa;
+  final TransacoesController controller;
+  final Transacao? despesa;
 
   const DespesaFormPage({
     super.key,
@@ -25,8 +28,8 @@ class DespesaFormPage extends StatefulWidget {
 class _DespesaFormPageState extends State<DespesaFormPage> {
   late final TextEditingController _valorController;
   late final TextEditingController _descricaoController;
-  String? _categoria;
-  DateTime _data = DateTime(2026, 10, 18);
+  String? _categoriaSelecionada;
+  late DateTime _data;
   bool _mostrarChips = false;
 
   bool get _editando => widget.despesa != null;
@@ -36,25 +39,52 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
     super.initState();
     final despesa = widget.despesa;
     _valorController = TextEditingController(
-      text: despesa == null ? '0,00' : formatarCampoValor(despesa.valorCentavos),
+      text: despesa == null
+          ? '0,00'
+          : FormatadorMoeda.formatarCampo(despesa.valorCentavos),
     );
     _descricaoController = TextEditingController(
       text: despesa == null || despesa.descricao == despesa.categoria
           ? ''
           : despesa.descricao,
     );
-    _categoria = despesa?.categoria;
-    _data = despesa?.data ?? DateTime(2026, 10, 18);
-    _mostrarChips = despesa != null &&
-        !DadosDemonstracao.categoriasDespesa
-            .any((c) => c.nome == despesa.categoria);
+    _categoriaSelecionada = despesa?.categoria;
+    _data = despesa?.data ?? DateTime.now();
+    widget.controller.addListener(_aoMudarController);
+    widget.controller.carregarCategorias();
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_aoMudarController);
     _valorController.dispose();
     _descricaoController.dispose();
     super.dispose();
+  }
+
+  void _aoMudarController() {
+    if (mounted) setState(() {});
+  }
+
+  List<CategoriaFinanceira> get _opcoes {
+    return widget.controller.categoriasDespesa
+        .map(
+          (categoria) => CategoriaFinanceira(
+            nome: categoria.nome,
+            icone: iconeParaCategoria(categoria.nome),
+            cor: AppColors.primary,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Categoria? get _categoriaEntidade {
+    final nome = _categoriaSelecionada;
+    if (nome == null) return null;
+    for (final categoria in widget.controller.categoriasDespesa) {
+      if (categoria.nome == nome) return categoria;
+    }
+    return null;
   }
 
   Future<void> _selecionarData() async {
@@ -84,46 +114,47 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
     final novaCategoria = await mostrarModalNovaCategoria(
       context,
       tipo: TipoTransacao.despesa,
-      valorInicial: 'Educação',
+      aoSalvarCustomizado: (nome) =>
+          widget.controller.criarCategoria(nome, TipoTransacao.despesa),
     );
-    if (novaCategoria == null || novaCategoria.nome.isEmpty) return;
-    widget.controller.adicionarCategoriaDespesa(novaCategoria.nome);
     if (!mounted) return;
+    if (novaCategoria == null) {
+      final erro = widget.controller.mensagemErro;
+      if (erro != null) _aviso(erro);
+      return;
+    }
     setState(() {
-      _categoria = novaCategoria.nome;
+      _categoriaSelecionada = novaCategoria.nome;
       _mostrarChips = true;
     });
   }
 
-  void _salvar() {
+  Future<void> _salvar() async {
     FocusScope.of(context).unfocus();
-    final valor = parseValorParaCentavos(_valorController.text);
-    if (valor <= 0) {
+
+    final valorCentavos =
+        FormatadorMoeda.converterTextoParaCentavos(_valorController.text);
+    if (valorCentavos <= 0) {
       _aviso('Informe o valor da despesa.');
       return;
     }
-    if (_categoria == null || _categoria!.isEmpty) {
+
+    final categoria = _categoriaEntidade;
+    if (categoria == null) {
       _aviso('Selecione o tipo de despesa.');
       return;
     }
 
-    if (_editando) {
-      widget.controller.editarDespesa(
-        widget.despesa!,
-        descricao: _descricaoController.text.trim(),
-        categoria: _categoria!,
-        valorCentavos: valor,
-        data: _data,
-      );
-    } else {
-      widget.controller.adicionarDespesa(
-        descricao: _descricaoController.text.trim(),
-        categoria: _categoria!,
-        valorCentavos: valor,
-        data: _data,
-      );
-    }
-    Navigator.of(context).pop();
+    final sucesso = await widget.controller.salvarDespesa(
+      existente: widget.despesa,
+      descricao: _descricaoController.text.trim(),
+      categoria: categoria,
+      valorFormatado: _valorController.text,
+      data: _data,
+    );
+
+    if (!mounted || sucesso) return;
+    _aviso(widget.controller.mensagemErro ?? 'Não foi possível salvar a despesa.');
   }
 
   void _aviso(String mensagem) {
@@ -160,18 +191,20 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
                     const FormLabel('Tipo de despesa'),
                     AppDropdownField(
                       hint: 'Selecione o tipo de despesa',
-                      value: _categoria,
-                      options: widget.controller.categoriasDespesa,
+                      value: _categoriaSelecionada,
+                      options: _opcoes,
                       onSelected: (categoria) {
-                        setState(() => _categoria = categoria.nome);
+                        setState(
+                          () => _categoriaSelecionada = categoria.nome,
+                        );
                       },
                       onCreate: _criarCategoria,
                     ),
                     if (_mostrarChips) ...[
                       const SizedBox(height: 13),
                       CategoryConfirmationChips(
-                        categorias: widget.controller.categoriasDespesa,
-                        selecionada: _categoria ?? '',
+                        categorias: _opcoes,
+                        selecionada: _categoriaSelecionada ?? '',
                       ),
                     ],
                     const SizedBox(height: 20),
@@ -183,7 +216,7 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
                     const SizedBox(height: 19),
                     const FormLabel('Data da despesa'),
                     DateField(
-                      value: formatarDataCurta(_data),
+                      value: FormatadorMoeda.formatarDataCurta(_data),
                       onTap: _selecionarData,
                     ),
                     const SizedBox(height: 20),
@@ -196,16 +229,25 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _salvar,
-                  child: Text(
-                    _editando ? 'SALVAR ALTERAÇÕES' : 'Salvar despesa',
-                    style: const TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
+                  onPressed: widget.controller.salvando ? null : _salvar,
+                  child: widget.controller.salvando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _editando ? 'SALVAR ALTERAÇÕES' : 'Salvar despesa',
+                          style: const TextStyle(
+                            fontFamily: 'PlusJakartaSans',
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
                 ),
               ),
             ),
