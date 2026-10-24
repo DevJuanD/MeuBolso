@@ -6,6 +6,7 @@ import 'package:meu_bolso/features/autenticacao/domain/entities/perfil_local.dar
 import 'package:meu_bolso/features/autenticacao/domain/repositories/autenticacao_repository.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'package:meu_bolso/features/categorias/domain/entities/categoria.dart';
@@ -47,6 +48,11 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
 
   @override
   Future<PerfilLocal?> obterPerfil() async => perfilArmazenado;
+
+  @override
+  Future<void> realizarLogout() async {
+    perfilArmazenado = null;
+  }
 }
 
 class FakeDashboardRepository implements DashboardRepository {
@@ -207,6 +213,7 @@ DependenciasApp _criarDependencias(FakeAutenticacaoRepository autenticacao) {
     cadastrarPerfilUseCase: CadastrarPerfilUseCase(autenticacao),
     loginUseCase: LoginUseCase(autenticacao),
     obterPerfilUseCase: ObterPerfilUseCase(autenticacao),
+    logoutUseCase: LogoutUseCase(autenticacao),
     obterResumoDashboardUseCase: ObterResumoDashboardUseCase(
       FakeDashboardRepository(),
     ),

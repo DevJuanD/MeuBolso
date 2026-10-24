@@ -86,5 +86,16 @@ void main() {
         throwsA(isA<PerfilNaoEncontradoException>()),
       );
     });
+
+    test('realizarLogout remove o perfil do armazenamento', () async {
+      await repositorio.cadastrarPerfil('Maria Silva', 'maria@exemplo.com', 'senha123');
+      expect(await repositorio.verificarExistenciaPerfil(), isTrue);
+
+      await repositorio.realizarLogout();
+
+      expect(fakeDataSource.perfilArmazenado, isNull);
+      expect(await repositorio.verificarExistenciaPerfil(), isFalse);
+      expect(await repositorio.obterPerfil(), isNull);
+    });
   });
 }

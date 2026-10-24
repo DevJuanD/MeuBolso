@@ -4,6 +4,7 @@ import 'package:meu_bolso/features/autenticacao/domain/exceptions/falhas_autenti
 import 'package:meu_bolso/features/autenticacao/domain/repositories/autenticacao_repository.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/presentation/controllers/autenticacao_controller.dart';
@@ -11,6 +12,7 @@ import 'package:meu_bolso/features/autenticacao/presentation/controllers/autenti
 class FakeAutenticacaoRepository implements AutenticacaoRepository {
   PerfilLocal? perfilArmazenado;
   String? senhaArmazenada;
+  bool falharLogout = false;
 
   @override
   Future<bool> verificarExistenciaPerfil() async => perfilArmazenado != null;
@@ -31,6 +33,13 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
 
   @override
   Future<PerfilLocal?> obterPerfil() async => perfilArmazenado;
+
+  @override
+  Future<void> realizarLogout() async {
+    if (falharLogout) throw Exception('falha ao remover perfil');
+    perfilArmazenado = null;
+    senhaArmazenada = null;
+  }
 }
 
 void main() {
@@ -45,13 +54,14 @@ void main() {
         cadastrarPerfilUseCase: CadastrarPerfilUseCase(fakeRepo),
         loginUseCase: LoginUseCase(fakeRepo),
         obterPerfilUseCase: ObterPerfilUseCase(fakeRepo),
+        logoutUseCase: LogoutUseCase(fakeRepo),
       );
     });
 
     test('inicializar define modo cadastro quando nenhum perfil existe', () async {
       await controller.inicializar();
 
-      expect(controller.modo, ModoAutenticacao.cadastro);
+      expect(controller.modo, ModoAutenticacao.requerCadastro);
       expect(controller.perfilAtual, isNull);
     });
 
@@ -60,7 +70,7 @@ void main() {
 
       await controller.inicializar();
 
-      expect(controller.modo, ModoAutenticacao.login);
+      expect(controller.modo, ModoAutenticacao.perfilExistente);
       expect(controller.perfilAtual?.nome, 'Carlos');
     });
 
@@ -76,7 +86,7 @@ void main() {
       expect(resultado, isNotNull);
       expect(resultado!.nome, 'Carlos');
       expect(controller.perfilAtual?.nome, 'Carlos');
-      expect(controller.modo, ModoAutenticacao.login);
+      expect(controller.modo, ModoAutenticacao.perfilExistente);
     });
 
     test('entrar com senha correta retorna perfil', () async {
@@ -98,6 +108,36 @@ void main() {
 
       expect(perfil, isNull);
       expect(controller.mensagemErro, 'Senha incorreta. Verifique e tente novamente.');
+    });
+
+    test('realizarLogout limpa o perfil e volta a requerer cadastro', () async {
+      await fakeRepo.cadastrarPerfil('Carlos', 'carlos@email.com', '123456');
+      await controller.inicializar();
+      expect(controller.modo, ModoAutenticacao.perfilExistente);
+
+      final sucesso = await controller.realizarLogout();
+
+      expect(sucesso, isTrue);
+      expect(controller.modo, ModoAutenticacao.requerCadastro);
+      expect(controller.perfilAtual, isNull);
+      expect(fakeRepo.perfilArmazenado, isNull);
+      expect(controller.estaCarregando, isFalse);
+      expect(controller.mensagemErro, isNull);
+    });
+
+    test('realizarLogout mantém o perfil quando a remoção falha', () async {
+      await fakeRepo.cadastrarPerfil('Carlos', 'carlos@email.com', '123456');
+      await controller.inicializar();
+      fakeRepo.falharLogout = true;
+
+      final sucesso = await controller.realizarLogout();
+
+      expect(sucesso, isFalse);
+      expect(controller.modo, ModoAutenticacao.perfilExistente);
+      expect(controller.perfilAtual?.nome, 'Carlos');
+      expect(fakeRepo.perfilArmazenado, isNotNull);
+      expect(controller.mensagemErro, 'Não foi possível sair do perfil.');
+      expect(controller.estaCarregando, isFalse);
     });
   });
 }
