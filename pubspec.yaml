@@ -31,6 +31,7 @@ dev_dependencies:
   build_runner: ^2.5.0
   freezed: ^4.0.3
   json_serializable: ^6.15.2
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -39,3 +40,9 @@ flutter:
     - family: PlusJakartaSans
       fonts:
         - asset: assets/fonts/PlusJakartaSans-Variable.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  remove_alpha_ios: true
