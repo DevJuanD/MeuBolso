@@ -13,4 +13,7 @@ abstract class AutenticacaoRepository {
 
   /// Retorna o perfil existente sem dados de credenciais, ou nulo se não houver.
   Future<PerfilLocal?> obterPerfil();
+
+  /// Remove o perfil atual do dispositivo, desvinculando as credenciais locais.
+  Future<void> realizarLogout();
 }

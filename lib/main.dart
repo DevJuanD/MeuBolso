@@ -8,6 +8,7 @@ import 'features/autenticacao/data/datasources/autenticacao_local_datasource.dar
 import 'features/autenticacao/data/repositories/autenticacao_repository_impl.dart';
 import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
+import 'features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'features/categorias/data/datasources/categorias_local_datasource.dart';
@@ -60,6 +61,7 @@ Future<void> main() async {
         cadastrarPerfilUseCase: CadastrarPerfilUseCase(autenticacaoRepositorio),
         loginUseCase: LoginUseCase(autenticacaoRepositorio),
         obterPerfilUseCase: ObterPerfilUseCase(autenticacaoRepositorio),
+        logoutUseCase: LogoutUseCase(autenticacaoRepositorio),
         obterResumoDashboardUseCase: ObterResumoDashboardUseCase(
           dashboardRepositorio,
         ),

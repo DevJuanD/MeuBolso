@@ -4,14 +4,19 @@ import '../../domain/entities/perfil_local.dart';
 import '../../domain/exceptions/falhas_autenticacao.dart';
 import '../../domain/usecases/cadastrar_perfil_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/obter_perfil_usecase.dart';
 import '../../domain/usecases/verificar_perfil_usecase.dart';
 
 /// Modos da tela de autenticação.
 enum ModoAutenticacao {
   carregando,
-  cadastro,
-  login,
+
+  /// Nenhum perfil existe no dispositivo: exibe o formulário de cadastro.
+  requerCadastro,
+
+  /// Já existe um perfil: exibe o formulário de login por senha.
+  perfilExistente,
 }
 
 /// Controlador de apresentação para o fluxo de autenticação e perfil local.
@@ -20,16 +25,19 @@ class AutenticacaoController extends ChangeNotifier {
   final CadastrarPerfilUseCase _cadastrarPerfilUseCase;
   final LoginUseCase _loginUseCase;
   final ObterPerfilUseCase _obterPerfilUseCase;
+  final LogoutUseCase _logoutUseCase;
 
   AutenticacaoController({
     required VerificarPerfilUseCase verificarPerfilUseCase,
     required CadastrarPerfilUseCase cadastrarPerfilUseCase,
     required LoginUseCase loginUseCase,
     required ObterPerfilUseCase obterPerfilUseCase,
+    required LogoutUseCase logoutUseCase,
   })  : _verificarPerfilUseCase = verificarPerfilUseCase,
         _cadastrarPerfilUseCase = cadastrarPerfilUseCase,
         _loginUseCase = loginUseCase,
-        _obterPerfilUseCase = obterPerfilUseCase;
+        _obterPerfilUseCase = obterPerfilUseCase,
+        _logoutUseCase = logoutUseCase;
 
   ModoAutenticacao _modo = ModoAutenticacao.carregando;
   ModoAutenticacao get modo => _modo;
@@ -53,14 +61,14 @@ class AutenticacaoController extends ChangeNotifier {
       final existe = await _verificarPerfilUseCase();
       if (existe) {
         _perfilAtual = await _obterPerfilUseCase();
-        _modo = ModoAutenticacao.login;
+        _modo = ModoAutenticacao.perfilExistente;
       } else {
         _perfilAtual = null;
-        _modo = ModoAutenticacao.cadastro;
+        _modo = ModoAutenticacao.requerCadastro;
       }
     } catch (_) {
       _mensagemErro = 'Não foi possível carregar os dados de autenticação.';
-      _modo = ModoAutenticacao.cadastro;
+      _modo = ModoAutenticacao.requerCadastro;
     } finally {
       _estaCarregando = false;
       notifyListeners();
@@ -85,7 +93,7 @@ class AutenticacaoController extends ChangeNotifier {
       );
       final perfil = await _obterPerfilUseCase();
       _perfilAtual = perfil;
-      _modo = ModoAutenticacao.login;
+      _modo = ModoAutenticacao.perfilExistente;
       return perfil;
     } on FalhaAutenticacao catch (e) {
       _mensagemErro = e.mensagem;
@@ -124,6 +132,29 @@ class AutenticacaoController extends ChangeNotifier {
   void limparErro() {
     if (_mensagemErro != null) {
       _mensagemErro = null;
+      notifyListeners();
+    }
+  }
+
+  /// Desvincula o perfil atual do dispositivo e volta ao estado de cadastro.
+  Future<bool> realizarLogout() async {
+    _estaCarregando = true;
+    _mensagemErro = null;
+    notifyListeners();
+
+    try {
+      await _logoutUseCase();
+      _perfilAtual = null;
+      _modo = ModoAutenticacao.requerCadastro;
+      return true;
+    } on FalhaAutenticacao catch (e) {
+      _mensagemErro = e.mensagem;
+      return false;
+    } catch (_) {
+      _mensagemErro = 'Não foi possível sair do perfil.';
+      return false;
+    } finally {
+      _estaCarregando = false;
       notifyListeners();
     }
   }

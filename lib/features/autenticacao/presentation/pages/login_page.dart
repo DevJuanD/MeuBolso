@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
     final controller = widget.controller;
     if (controller.estaCarregando) return;
 
-    if (controller.modo == ModoAutenticacao.cadastro) {
+    if (controller.modo == ModoAutenticacao.requerCadastro) {
       final perfil = await controller.cadastrar(
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
@@ -95,6 +95,49 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _confirmarLogout() async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Sair deste perfil'),
+          content: const Text(
+            'Tem certeza de que deseja sair? O perfil atual será desvinculado deste dispositivo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFEF4444),
+              ),
+              child: const Text('Sair'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmado != true || !mounted) return;
+
+    final sucesso = await widget.controller.realizarLogout();
+    if (!mounted || !sucesso) return;
+
+    _limparFormulario();
+  }
+
+  void _limparFormulario() {
+    _nomeController.clear();
+    _emailController.clear();
+    _senhaController.clear();
+    _confirmacaoSenhaController.clear();
+    _formKey.currentState?.reset();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
@@ -112,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
             }
 
             final ehCadastro =
-                widget.controller.modo == ModoAutenticacao.cadastro;
+                widget.controller.modo == ModoAutenticacao.requerCadastro;
             final nomePerfil = widget.controller.perfilAtual?.nome ?? '';
 
             return Center(
@@ -152,6 +195,10 @@ class _LoginPageState extends State<LoginPage> {
                           ehCadastro: ehCadastro,
                           estaCarregando: widget.controller.estaCarregando,
                         ),
+                        if (!ehCadastro) ...[
+                          const SizedBox(height: 16),
+                          _construirBotaoSair(),
+                        ],
                       ],
                     ),
                   ),
@@ -264,11 +311,11 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       controller: _senhaController,
       obscureText: _senhaOculta,
-      textInputAction: widget.controller.modo == ModoAutenticacao.cadastro
+      textInputAction: widget.controller.modo == ModoAutenticacao.requerCadastro
           ? TextInputAction.next
           : TextInputAction.done,
       onFieldSubmitted: (_) {
-        if (widget.controller.modo == ModoAutenticacao.login) {
+        if (widget.controller.modo == ModoAutenticacao.perfilExistente) {
           _submeter();
         }
       },
@@ -352,6 +399,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
             )
           : Text(ehCadastro ? 'Criar Perfil' : 'Entrar'),
+    );
+  }
+
+  Widget _construirBotaoSair() {
+    return TextButton(
+      onPressed: widget.controller.estaCarregando ? null : _confirmarLogout,
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFFEF4444),
+      ),
+      child: const Text('Sair deste perfil'),
     );
   }
 }

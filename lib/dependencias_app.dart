@@ -1,5 +1,6 @@
 import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
+import 'features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
 import 'features/categorias/domain/usecases/criar_categoria_usecase.dart';
@@ -22,6 +23,7 @@ class DependenciasApp {
   final CadastrarPerfilUseCase cadastrarPerfilUseCase;
   final LoginUseCase loginUseCase;
   final ObterPerfilUseCase obterPerfilUseCase;
+  final LogoutUseCase logoutUseCase;
   final ObterResumoDashboardUseCase obterResumoDashboardUseCase;
   final SalvarTransacaoUseCase salvarTransacaoUseCase;
   final ListarTransacoesUseCase listarTransacoesUseCase;
@@ -38,6 +40,7 @@ class DependenciasApp {
     required this.cadastrarPerfilUseCase,
     required this.loginUseCase,
     required this.obterPerfilUseCase,
+    required this.logoutUseCase,
     required this.obterResumoDashboardUseCase,
     required this.salvarTransacaoUseCase,
     required this.listarTransacoesUseCase,

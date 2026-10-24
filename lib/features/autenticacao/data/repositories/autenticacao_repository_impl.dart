@@ -65,6 +65,11 @@ class AutenticacaoRepositoryImpl implements AutenticacaoRepository {
     return perfil?.paraEntidade();
   }
 
+  @override
+  Future<void> realizarLogout() async {
+    await _dataSource.deletarPerfil();
+  }
+
   String _gerarSalt([int tamanhoBytes = 16]) {
     final geradorAleatorio = Random.secure();
     final bytes = List<int>.generate(

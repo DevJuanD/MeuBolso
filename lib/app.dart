@@ -49,6 +49,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
       cadastrarPerfilUseCase: dependencias.cadastrarPerfilUseCase,
       loginUseCase: dependencias.loginUseCase,
       obterPerfilUseCase: dependencias.obterPerfilUseCase,
+      logoutUseCase: dependencias.logoutUseCase,
     );
 
     _dashboardController = DashboardController(
