@@ -173,7 +173,11 @@ class AppDropdownField extends StatefulWidget {
 class _AppDropdownFieldState extends State<AppDropdownField> {
   final LayerLink _link = LayerLink();
   OverlayEntry? _entry;
+  final ScrollController _scrollController = ScrollController();
   double _width = 300;
+
+  static const double _alturaItem = 43;
+  static const int _itensVisiveis = 3;
 
   bool get _aberto => _entry != null;
 
@@ -226,16 +230,41 @@ class _AppDropdownFieldState extends State<AppDropdownField> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final categoria in widget.options)
-                        _MenuRow(
-                          icon: categoria.icone,
-                          label: categoria.nome,
-                          onTap: () {
-                            widget.onSelected(categoria);
-                            _fechar();
-                          },
+                      // Lista com exatamente 3 itens visíveis e scroll interno
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: _alturaItem * _itensVisiveis,
                         ),
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          interactive: true,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.only(right: 10),
+                            physics: const ClampingScrollPhysics(),
+                            itemCount: widget.options.length,
+                            itemExtent: _alturaItem,
+                            itemBuilder: (context, index) {
+                              final categoria = widget.options[index];
+                              return _MenuRow(
+                                icon: categoria.icone,
+                                label: categoria.nome,
+                                onTap: () {
+                                  widget.onSelected(categoria);
+                                  _fechar();
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 2),
+
+                      // Botão fixo no rodapé (fora do scroll da lista)
                       InkWell(
                         borderRadius: BorderRadius.circular(11),
                         onTap: () {
@@ -277,6 +306,7 @@ class _AppDropdownFieldState extends State<AppDropdownField> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _entry?.remove();
     _entry = null;
     super.dispose();

@@ -6,6 +6,7 @@ import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../../../relatorios/presentation/controllers/relatorio_controller.dart';
 import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
+import '../../../transacoes/presentation/pages/transacoes_page.dart';
 import 'despesas_page.dart';
 import 'relatorios_page.dart';
 
@@ -71,8 +72,7 @@ class _RootShellState extends State<RootShell> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
-            final escuro =
-                Theme.of(sheetContext).brightness == Brightness.dark;
+            final escuro = Theme.of(sheetContext).brightness == Brightness.dark;
 
             return Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 22),
@@ -123,7 +123,7 @@ class _RootShellState extends State<RootShell> {
                       const SizedBox(height: 18),
                       _MaisOpcao(
                         icon: Icons.arrow_downward_rounded,
-                        titulo: 'Receitas',
+                        titulo: 'Minhas Receitas',
                         descricao: 'Veja e gerencie suas entradas',
                         onTap: () {
                           Navigator.of(sheetContext).pop();
@@ -131,19 +131,52 @@ class _RootShellState extends State<RootShell> {
                         },
                       ),
                       const SizedBox(height: 10),
+
                       _MaisOpcao(
                         icon: Icons.arrow_upward_rounded,
-                        titulo: 'Despesas',
+                        titulo: 'Minhas Despesas',
                         descricao: 'Veja e gerencie seus gastos',
                         onTap: () {
                           Navigator.of(sheetContext).pop();
-                          _selecionarAba(1);
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => DespesasPage(
+                                controller: widget.transacoesController,
+                                onAbaSelecionada: _selecionarAba,
+                                onAbrirMovimentacoes: _abrirMovimentacoes,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // _MaisOpcao(
+                      //   icon: Icons.arrow_upward_rounded,
+                      //   titulo: 'Movimentações',
+                      //   descricao: 'Veja e gerencie suas movimentações',
+                      //   onTap: () {
+                      //     Navigator.of(sheetContext).pop();
+                      //     Navigator.of(
+                      //       context,
+                      //     ).pushNamed(RotasApp.movimentacoes);
+                      //   },
+                      // ),
+                      const SizedBox(height: 10),
+                      _MaisOpcao(
+                        icon: Icons.category_outlined,
+                        titulo: 'Gerenciar Categorias',
+                        descricao: 'Crie, edite e exclua tipos',
+                        onTap: () {
+                          Navigator.of(sheetContext).pop();
+                          Navigator.of(context).pushNamed(
+                            RotasApp.gerenciarCategorias,
+                          );
                         },
                       ),
                       const SizedBox(height: 10),
                       _MaisOpcao(
                         icon: Icons.flag_outlined,
-                        titulo: 'relatório',
+                        titulo: 'Relatório',
                         descricao: 'Analise sua vida financeira',
                         onTap: () {
                           Navigator.of(sheetContext).pop();
@@ -196,7 +229,7 @@ class _RootShellState extends State<RootShell> {
   Widget build(BuildContext context) {
     switch (_aba) {
       case 1:
-        return DespesasPage(
+        return TransacoesPage(
           controller: widget.transacoesController,
           onAbaSelecionada: _selecionarAba,
           onAbrirMovimentacoes: _abrirMovimentacoes,
@@ -295,10 +328,7 @@ class _MaisTema extends StatelessWidget {
   final bool escuro;
   final ValueChanged<bool> onChanged;
 
-  const _MaisTema({
-    required this.escuro,
-    required this.onChanged,
-  });
+  const _MaisTema({required this.escuro, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -356,10 +386,7 @@ class _MaisTema extends StatelessWidget {
                 ],
               ),
             ),
-            Switch(
-              value: escuro,
-              onChanged: onChanged,
-            ),
+            Switch(value: escuro, onChanged: onChanged),
           ],
         ),
       ),
