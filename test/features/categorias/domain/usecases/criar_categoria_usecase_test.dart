@@ -39,6 +39,20 @@ class _FakeCategoriaRepository implements CategoriaRepository {
     if (encontrados.isEmpty) return null;
     return encontrados.first;
   }
+
+  @override
+  Future<void> atualizar(Categoria categoria) async {
+    final index = categorias.indexWhere((c) => c.id == categoria.id);
+    if (index != -1) categorias[index] = categoria;
+  }
+
+  @override
+  Future<bool> excluir(String id) async {
+    final index = categorias.indexWhere((c) => c.id == id);
+    if (index == -1) return false;
+    categorias.removeAt(index);
+    return true;
+  }
 }
 
 void main() {

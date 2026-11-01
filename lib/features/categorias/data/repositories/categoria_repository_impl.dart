@@ -44,4 +44,24 @@ class CategoriaRepositoryImpl implements CategoriaRepository {
     final model = await _dataSource.buscarPorNomeETipo(nome, tipo);
     return model?.paraEntidade();
   }
+
+  @override
+  Future<void> atualizar(Categoria categoria) async {
+    final model = CategoriaModel.deEntidade(categoria);
+    await _dataSource.atualizar(model);
+  }
+
+  @override
+  Future<bool> excluir(String id) async {
+    final categoria = await obterPorId(id);
+    if (categoria == null) {
+      throw const CategoriaNaoEncontradaException();
+    }
+    // Categorias padrão não podem ser excluídas.
+    if (categoria.isPadrao) {
+      return false;
+    }
+    await _dataSource.excluir(id);
+    return true;
+  }
 }

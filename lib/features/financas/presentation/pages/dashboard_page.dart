@@ -74,10 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     trailing: mes == _mesSelecionado
-                        ? Icon(
-                            Icons.check_rounded,
-                            color: AppColors.primary,
-                          )
+                        ? Icon(Icons.check_rounded, color: AppColors.primary)
                         : null,
                     onTap: () => Navigator.of(context).pop(mes),
                   ),
@@ -198,9 +195,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   MonthSelector(
                     label: _mesSelecionado,
                     onTap: _escolherMes,
-                    trailing: FilterSquareButton(
-                      onTap: widget.onAbrirFiltros,
-                    ),
+                    trailing: FilterSquareButton(onTap: widget.onAbrirFiltros),
                   ),
                   const SizedBox(height: 16),
                   SurfaceCard(
@@ -307,10 +302,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ],
                               ),
                               const SizedBox(height: 2),
-                              ReceitasDespesasChart(
-                                pontos: [mes],
-                                height: 168,
-                              ),
+                              ReceitasDespesasChart(pontos: [mes], height: 168),
                               const SizedBox(height: 6),
                               Text(
                                 'Um único mês selecionado, sem projeção de evolução.',
@@ -418,4 +410,3 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
-

@@ -46,6 +46,27 @@ class _FakeCategoriasLocalDataSource implements CategoriasLocalDataSource {
     if (encontrados.isEmpty) return null;
     return encontrados.first;
   }
+
+  @override
+  Future<void> atualizar(CategoriaModel model) async {
+    final indice = itens.indexWhere((item) => item.id == model.id);
+    if (indice != -1) {
+      itens[indice] = model;
+    }
+  }
+
+  @override
+  Future<void> excluir(String id) async {
+    itens.removeWhere((item) => item.id == id);
+  }
+
+  @override
+  Future<List<CategoriaModel>> listarTodas({TipoTransacao? tipo}) async {
+    if (tipo != null) {
+      return itens.where((item) => item.tipo == tipo).toList();
+    }
+    return List.of(itens);
+  }
 }
 
 void main() {

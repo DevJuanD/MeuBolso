@@ -40,6 +40,9 @@ class BancoDeDados {
     if (versao >= 2) {
       await _migracaoV2(db);
     }
+    if (versao >= 3) {
+      await _migracaoV3(db);
+    }
   }
 
   static Future<void> _executarMigracoes(
@@ -49,6 +52,7 @@ class BancoDeDados {
   ) async {
     if (versaoAntiga < 1) await _migracaoV1(db);
     if (versaoAntiga < 2 && versaoNova >= 2) await _migracaoV2(db);
+    if (versaoAntiga < 3 && versaoNova >= 3) await _migracaoV3(db);
   }
 
   static Future<void> _migracaoV1(Database db) async {
@@ -80,6 +84,7 @@ class BancoDeDados {
         ${EsquemaBanco.colCategoriaNome}     TEXT    NOT NULL,
         ${EsquemaBanco.colCategoriaTipo}     TEXT    NOT NULL CHECK(${EsquemaBanco.colCategoriaTipo} IN ('receita', 'despesa')),
         ${EsquemaBanco.colCategoriaIsPadrao} INTEGER NOT NULL DEFAULT 0,
+        ${EsquemaBanco.colCategoriaIconeId}  TEXT    DEFAULT 'default',
         UNIQUE (${EsquemaBanco.colCategoriaNome}, ${EsquemaBanco.colCategoriaTipo})
       );
     ''');
@@ -135,6 +140,7 @@ class BancoDeDados {
         ${EsquemaBanco.colCategoriaNome}     TEXT    NOT NULL,
         ${EsquemaBanco.colCategoriaTipo}     TEXT    NOT NULL CHECK(${EsquemaBanco.colCategoriaTipo} IN ('receita', 'despesa')),
         ${EsquemaBanco.colCategoriaIsPadrao} INTEGER NOT NULL DEFAULT 0,
+        ${EsquemaBanco.colCategoriaIconeId}  TEXT    DEFAULT 'default',
         UNIQUE (${EsquemaBanco.colCategoriaNome}, ${EsquemaBanco.colCategoriaTipo})
       );
     ''');
@@ -163,6 +169,33 @@ class BancoDeDados {
     ''');
   }
 
+  static Future<void> _migracaoV3(Database db) async {
+    // Adiciona coluna icone_id na tabela de categorias (se ainda não existir).
+    final infoColunasCategorias = await db.rawQuery(
+      'PRAGMA table_info(${EsquemaBanco.tabelaCategorias});',
+    );
+    final possuiColunaIconeId = infoColunasCategorias.any(
+      (coluna) => coluna['name'] == EsquemaBanco.colCategoriaIconeId,
+    );
+    if (!possuiColunaIconeId) {
+      await db.execute('''
+        ALTER TABLE ${EsquemaBanco.tabelaCategorias}
+        ADD COLUMN ${EsquemaBanco.colCategoriaIconeId} TEXT DEFAULT 'default';
+      ''');
+    }
+
+    // Adiciona coluna excluida_em para exclusão lógica de categorias customizadas.
+    final possuiColunaExcluidaEm = infoColunasCategorias.any(
+      (coluna) => coluna['name'] == EsquemaBanco.colCategoriaExcluidaEm,
+    );
+    if (!possuiColunaExcluidaEm) {
+      await db.execute('''
+        ALTER TABLE ${EsquemaBanco.tabelaCategorias}
+        ADD COLUMN ${EsquemaBanco.colCategoriaExcluidaEm} TEXT;
+      ''');
+    }
+  }
+
   /// Popula as categorias padrão do projeto de forma idempotente.
   static Future<void> popularCategoriasPadrao(DatabaseExecutor db) async {
     const categoriasPadrao = [
@@ -172,36 +205,42 @@ class BancoDeDados {
         EsquemaBanco.colCategoriaNome: 'Salário',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'trabalho',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_receita_freelance',
         EsquemaBanco.colCategoriaNome: 'Freelance',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'freelance',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_receita_vendas',
         EsquemaBanco.colCategoriaNome: 'Vendas',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'vendas',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_receita_rendimentos',
         EsquemaBanco.colCategoriaNome: 'Rendimentos',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'rendimentos',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_receita_presente',
         EsquemaBanco.colCategoriaNome: 'Presente',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'presente',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_receita_outros',
         EsquemaBanco.colCategoriaNome: 'Outros',
         EsquemaBanco.colCategoriaTipo: 'receita',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'default',
       },
       // Despesas padrão
       {
@@ -209,48 +248,56 @@ class BancoDeDados {
         EsquemaBanco.colCategoriaNome: 'Alimentação',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'alimentacao',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_transporte',
         EsquemaBanco.colCategoriaNome: 'Transporte',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'transporte',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_moradia',
         EsquemaBanco.colCategoriaNome: 'Moradia',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'moradia',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_contas_e_servicos',
         EsquemaBanco.colCategoriaNome: 'Contas e serviços',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'contas',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_saude',
         EsquemaBanco.colCategoriaNome: 'Saúde',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'saude',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_lazer',
         EsquemaBanco.colCategoriaNome: 'Lazer',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'lazer',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_compras',
         EsquemaBanco.colCategoriaNome: 'Compras',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'compras',
       },
       {
         EsquemaBanco.colCategoriaId: 'padrao_despesa_outros',
         EsquemaBanco.colCategoriaNome: 'Outros',
         EsquemaBanco.colCategoriaTipo: 'despesa',
         EsquemaBanco.colCategoriaIsPadrao: 1,
+        EsquemaBanco.colCategoriaIconeId: 'default',
       },
     ];
 

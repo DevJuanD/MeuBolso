@@ -8,11 +8,7 @@ class LoginPage extends StatefulWidget {
   final AutenticacaoController controller;
   final void Function(PerfilLocal perfil)? onAutenticado;
 
-  const LoginPage({
-    super.key,
-    required this.controller,
-    this.onAutenticado,
-  });
+  const LoginPage({super.key, required this.controller, this.onAutenticado});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -85,9 +81,7 @@ class _LoginPageState extends State<LoginPage> {
         widget.onAutenticado?.call(perfil);
       }
     } else {
-      final perfil = await controller.entrar(
-        senha: _senhaController.text,
-      );
+      final perfil = await controller.entrar(senha: _senhaController.text);
 
       if (perfil != null && mounted) {
         widget.onAutenticado?.call(perfil);
@@ -149,9 +143,7 @@ class _LoginPageState extends State<LoginPage> {
           animation: widget.controller,
           builder: (context, _) {
             if (widget.controller.modo == ModoAutenticacao.carregando) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
 
             final ehCadastro =
@@ -242,9 +234,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          ehCadastro
-              ? 'Crie seu perfil local'
-              : 'Olá, $nomePerfil!',
+          ehCadastro ? 'Crie seu perfil local' : 'Olá, $nomePerfil!',
           textAlign: TextAlign.center,
           style: tema.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
@@ -405,9 +395,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _construirBotaoSair() {
     return TextButton(
       onPressed: widget.controller.estaCarregando ? null : _confirmarLogout,
-      style: TextButton.styleFrom(
-        foregroundColor: const Color(0xFFEF4444),
-      ),
+      style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
       child: const Text('Sair deste perfil'),
     );
   }

@@ -118,6 +118,24 @@ class FakeCategoriaRepository implements CategoriaRepository {
     dados.add(categoria);
     return categoria;
   }
+
+  @override
+  Future<void> atualizar(Categoria categoria) async {
+    final indice = dados.indexWhere((c) => c.id == categoria.id);
+    if (indice != -1) {
+      dados[indice] = categoria;
+    }
+  }
+
+  @override
+  Future<bool> excluir(String id) async {
+    final indice = dados.indexWhere((c) => c.id == id);
+    if (indice == -1) return false;
+    final categoria = dados[indice];
+    if (categoria.isPadrao) return false;
+    dados.removeAt(indice);
+    return true;
+  }
 }
 
 TransacoesController criarTransacoesController({

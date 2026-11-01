@@ -8,12 +8,14 @@ class CategoriaModel {
   final String nome;
   final TipoTransacao tipo;
   final bool isPadrao;
+  final String iconeId;
 
   const CategoriaModel({
     required this.id,
     required this.nome,
     required this.tipo,
     this.isPadrao = false,
+    this.iconeId = 'default',
   });
 
   factory CategoriaModel.deEntidade(Categoria categoria) {
@@ -22,6 +24,7 @@ class CategoriaModel {
       nome: categoria.nome,
       tipo: categoria.tipo,
       isPadrao: categoria.isPadrao,
+      iconeId: categoria.iconeId,
     );
   }
 
@@ -31,6 +34,7 @@ class CategoriaModel {
       nome: nome,
       tipo: tipo,
       isPadrao: isPadrao,
+      iconeId: iconeId,
     );
   }
 
@@ -40,6 +44,8 @@ class CategoriaModel {
       nome: mapa[EsquemaBanco.colCategoriaNome] as String,
       tipo: TipoTransacao.deTexto(mapa[EsquemaBanco.colCategoriaTipo] as String),
       isPadrao: (mapa[EsquemaBanco.colCategoriaIsPadrao] as int? ?? 0) == 1,
+      iconeId:
+          mapa[EsquemaBanco.colCategoriaIconeId] as String? ?? 'default',
     );
   }
 
@@ -49,6 +55,7 @@ class CategoriaModel {
       EsquemaBanco.colCategoriaNome: nome,
       EsquemaBanco.colCategoriaTipo: tipo.valorBanco,
       EsquemaBanco.colCategoriaIsPadrao: isPadrao ? 1 : 0,
+      EsquemaBanco.colCategoriaIconeId: iconeId,
     };
   }
 }

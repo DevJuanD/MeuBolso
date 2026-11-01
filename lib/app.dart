@@ -7,7 +7,9 @@ import 'core/theme/app_theme.dart';
 import 'dependencias_app.dart';
 import 'features/autenticacao/presentation/controllers/autenticacao_controller.dart';
 import 'features/autenticacao/presentation/pages/login_page.dart';
+import 'features/categorias/presentation/pages/gerenciar_categorias_page.dart';
 import 'features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'features/financas/presentation/pages/despesas_page.dart';
 import 'features/financas/presentation/pages/despesa_form_page.dart';
 import 'features/financas/presentation/pages/movimentacoes_page.dart';
 import 'features/financas/presentation/pages/receita_form_page.dart';
@@ -19,10 +21,12 @@ import 'features/transacoes/presentation/controllers/transacoes_controller.dart'
 
 class MeuBolsoApp extends StatefulWidget {
   final DependenciasApp dependencias;
+  final Exception? erroInicializacao;
 
   const MeuBolsoApp({
     super.key,
     required this.dependencias,
+    this.erroInicializacao,
   });
 
   @override
@@ -32,10 +36,10 @@ class MeuBolsoApp extends StatefulWidget {
 class _MeuBolsoAppState extends State<MeuBolsoApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  late final AutenticacaoController _autenticacaoController;
-  late final DashboardController _dashboardController;
-  late final RelatorioController _relatorioController;
-  late final TransacoesController _transacoesController;
+  late final AutenticacaoController? _autenticacaoController;
+  late final DashboardController? _dashboardController;
+  late final RelatorioController? _relatorioController;
+  late final TransacoesController? _transacoesController;
 
   ThemeMode _tema = ThemeMode.system;
 
@@ -44,36 +48,46 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
     super.initState();
     final dependencias = widget.dependencias;
 
+    // Se houve falha na inicialização, não inicializa controladores (dependências
+    // estão nulas). A aplicação exibe a tela de erro.
+    if (widget.erroInicializacao != null) {
+      _autenticacaoController = null;
+      _dashboardController = null;
+      _relatorioController = null;
+      _transacoesController = null;
+      return;
+    }
+
     _autenticacaoController = AutenticacaoController(
-      verificarPerfilUseCase: dependencias.verificarPerfilUseCase,
-      cadastrarPerfilUseCase: dependencias.cadastrarPerfilUseCase,
-      loginUseCase: dependencias.loginUseCase,
-      obterPerfilUseCase: dependencias.obterPerfilUseCase,
-      logoutUseCase: dependencias.logoutUseCase,
+      verificarPerfilUseCase: dependencias.verificarPerfilUseCase!,
+      cadastrarPerfilUseCase: dependencias.cadastrarPerfilUseCase!,
+      loginUseCase: dependencias.loginUseCase!,
+      obterPerfilUseCase: dependencias.obterPerfilUseCase!,
+      logoutUseCase: dependencias.logoutUseCase!,
     );
 
     _dashboardController = DashboardController(
-      obterResumoDashboardUseCase: dependencias.obterResumoDashboardUseCase,
-      obterPerfilUseCase: dependencias.obterPerfilUseCase,
+      obterResumoDashboardUseCase: dependencias.obterResumoDashboardUseCase!,
+      obterPerfilUseCase: dependencias.obterPerfilUseCase!,
     );
 
     _relatorioController = RelatorioController(
-      obterTotaisUseCase: dependencias.obterTotaisUseCase,
-      obterGastosPorCategoriaUseCase: dependencias.obterGastosPorCategoriaUseCase,
-      obterEvolucaoMensalUseCase: dependencias.obterEvolucaoMensalUseCase,
-      listarTransacoesUseCase: dependencias.listarTransacoesUseCase,
+      obterTotaisUseCase: dependencias.obterTotaisUseCase!,
+      obterGastosPorCategoriaUseCase: dependencias.obterGastosPorCategoriaUseCase!,
+      obterEvolucaoMensalUseCase: dependencias.obterEvolucaoMensalUseCase!,
+      listarTransacoesUseCase: dependencias.listarTransacoesUseCase!,
       listarCategoriasPorTipoUseCase:
-          dependencias.listarCategoriasPorTipoUseCase,
+          dependencias.listarCategoriasPorTipoUseCase!,
     );
 
     _transacoesController = TransacoesController(
-      salvarTransacaoUseCase: dependencias.salvarTransacaoUseCase,
-      listarTransacoesUseCase: dependencias.listarTransacoesUseCase,
-      excluirTransacaoUseCase: dependencias.excluirTransacaoUseCase,
-      restaurarTransacaoUseCase: dependencias.restaurarTransacaoUseCase,
-      criarCategoriaUseCase: dependencias.criarCategoriaUseCase,
+      salvarTransacaoUseCase: dependencias.salvarTransacaoUseCase!,
+      listarTransacoesUseCase: dependencias.listarTransacoesUseCase!,
+      excluirTransacaoUseCase: dependencias.excluirTransacaoUseCase!,
+      restaurarTransacaoUseCase: dependencias.restaurarTransacaoUseCase!,
+      criarCategoriaUseCase: dependencias.criarCategoriaUseCase!,
       listarCategoriasPorTipoUseCase:
-          dependencias.listarCategoriasPorTipoUseCase,
+          dependencias.listarCategoriasPorTipoUseCase!,
       navigatorKey: _navigatorKey,
       aoAlterarDados: _recarregarAposAlteracao,
     );
@@ -81,18 +95,18 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
 
   @override
   void dispose() {
-    _autenticacaoController.dispose();
-    _dashboardController.dispose();
-    _relatorioController.dispose();
-    _transacoesController.dispose();
+    _autenticacaoController?.dispose();
+    _dashboardController?.dispose();
+    _relatorioController?.dispose();
+    _transacoesController?.dispose();
     super.dispose();
   }
 
   /// Após salvar/excluir, dashboard e relatórios recarregam do SQLite.
   Future<void> _recarregarAposAlteracao() async {
     await Future.wait([
-      _dashboardController.carregar(),
-      _relatorioController.carregar(),
+      _dashboardController!.carregar(),
+      _relatorioController!.carregar(),
     ]);
   }
 
@@ -116,9 +130,9 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
     return RootShell(
       themeMode: _tema,
       onThemeModeChanged: _alterarTema,
-      dashboardController: _dashboardController,
-      transacoesController: _transacoesController,
-      relatorioController: _relatorioController,
+      dashboardController: _dashboardController!,
+      transacoesController: _transacoesController!,
+      relatorioController: _relatorioController!,
       abaInicial: abaInicial,
     );
   }
@@ -129,7 +143,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => ReceitasPage(
-            controller: _transacoesController,
+            controller: _transacoesController!,
             onAbaSelecionada: _navegarAba,
           ),
         );
@@ -137,7 +151,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => MovimentacoesPage(
-            controller: _transacoesController,
+            controller: _transacoesController!,
             onAbaSelecionada: _navegarAba,
           ),
         );
@@ -146,7 +160,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => ReceitaFormPage(
-            controller: _transacoesController,
+            controller: _transacoesController!,
             receita: transacao,
           ),
         );
@@ -155,8 +169,26 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => DespesaFormPage(
-            controller: _transacoesController,
+            controller: _transacoesController!,
             despesa: transacao,
+          ),
+        );
+      case RotasApp.despesas:
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => DespesasPage(
+            controller: _transacoesController!,
+            onAbaSelecionada: _navegarAba,
+            onAbrirMovimentacoes: () => _navigatorKey.currentState?.pushNamed(RotasApp.movimentacoes),
+          ),
+        );
+      case RotasApp.gerenciarCategorias:
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => GerenciarCategoriasPage(
+            listarUseCase: widget.dependencias.listarCategoriasPorTipoUseCase!,
+            criarUseCase: widget.dependencias.criarCategoriaUseCase!,
+            repositorio: widget.dependencias.categoriaRepository!,
           ),
         );
     }
@@ -165,6 +197,32 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Se houve falha na inicialização, exibe tela de erro visível (evita tela branca).
+    if (widget.erroInicializacao != null) {
+      return MaterialApp(
+        navigatorKey: _navigatorKey,
+        title: 'MeuBolso',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.claro,
+        darkTheme: AppTheme.escuro,
+        themeMode: _tema,
+        locale: const Locale('pt', 'BR'),
+        supportedLocales: const [Locale('pt', 'BR')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: _TelaErroInicializacao(
+          erro: widget.erroInicializacao!,
+          onTentarNovamente: () {
+            // Reinicia a aplicação (o estado é recriado).
+            setState(() {});
+          },
+        ),
+      );
+    }
+
     final temaClaro = AppTheme.claro;
     final temaEscuro = AppTheme.escuro;
 
@@ -189,7 +247,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
       },
       routes: {
         RotasApp.login: (context) => LoginPage(
-              controller: _autenticacaoController,
+              controller: _autenticacaoController!,
               onAutenticado: (_) {
                 Navigator.of(context)
                     .pushReplacementNamed(RotasApp.inicio);
@@ -200,6 +258,97 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         RotasApp.relatorios: (_) => _shell(2),
       },
       onGenerateRoute: _gerarRota,
+    );
+  }
+}
+
+/// Tela exibida quando a inicialização da aplicação falha (ex: banco de dados).
+class _TelaErroInicializacao extends StatelessWidget {
+  final Exception erro;
+  final VoidCallback onTentarNovamente;
+
+  const _TelaErroInicializacao({
+    required this.erro,
+    required this.onTentarNovamente,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: AppColors.danger,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Falha ao inicializar',
+                style: TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHeading,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Não foi possível iniciar o banco de dados local.',
+                style: TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Text(
+                  erro.toString(),
+                  style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    fontSize: 11,
+                    color: AppColors.textTertiary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: onTentarNovamente,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tentar novamente',
+                    style: TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

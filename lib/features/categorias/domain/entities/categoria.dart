@@ -14,5 +14,6 @@ abstract class Categoria with _$Categoria {
     required String nome,
     required TipoTransacao tipo,
     @Default(false) bool isPadrao,
+    @Default('default') String iconeId,
   }) = _Categoria;
 }

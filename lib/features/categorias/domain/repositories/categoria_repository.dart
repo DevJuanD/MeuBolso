@@ -14,4 +14,11 @@ abstract class CategoriaRepository {
 
   /// Busca uma categoria pelo nome exato e tipo.
   Future<Categoria?> buscarPorNomeETipo(String nome, TipoTransacao tipo);
+
+  /// Atualiza uma categoria existente no banco de dados.
+  Future<void> atualizar(Categoria categoria);
+
+  /// Exclui logicamente uma categoria pelo seu identificador único.
+  /// Retorna `false` se a categoria for padrão (não pode ser excluída).
+  Future<bool> excluir(String id);
 }

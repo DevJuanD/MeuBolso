@@ -1,6 +1,6 @@
 /// Centraliza os nomes de tabelas e colunas do banco de dados SQLite.
 abstract final class EsquemaBanco {
-  static const int versaoAtual = 2;
+  static const int versaoAtual = 3;
   static const String nomeArquivo = 'meu_bolso.db';
 
   // categorias
@@ -9,6 +9,8 @@ abstract final class EsquemaBanco {
   static const String colCategoriaNome = 'nome';
   static const String colCategoriaTipo = 'tipo';
   static const String colCategoriaIsPadrao = 'is_padrao';
+  static const String colCategoriaIconeId = 'icone_id';
+  static const String colCategoriaExcluidaEm = 'excluida_em';
 
   // perfis
   static const String tabelaPerfis = 'perfis';

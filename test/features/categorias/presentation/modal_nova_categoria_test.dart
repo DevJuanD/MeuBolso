@@ -28,6 +28,20 @@ class _FakeCategoriaRepository implements CategoriaRepository {
 
   @override
   Future<Categoria?> buscarPorNomeETipo(String nome, TipoTransacao tipo) async => null;
+
+  @override
+  Future<void> atualizar(Categoria categoria) async {
+    final index = itens.indexWhere((c) => c.id == categoria.id);
+    if (index != -1) itens[index] = categoria;
+  }
+
+  @override
+  Future<bool> excluir(String id) async {
+    final index = itens.indexWhere((c) => c.id == id);
+    if (index == -1) return false;
+    itens.removeAt(index);
+    return true;
+  }
 }
 
 Widget _criarWidgetTeste(Widget child) {

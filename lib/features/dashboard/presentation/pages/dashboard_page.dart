@@ -122,16 +122,16 @@ class _DashboardPageState extends State<DashboardPage> {
             child: widget.controller.carregando
                 ? const Center(child: CircularProgressIndicator())
                 : widget.controller.mensagemErro != null
-                    ? _MensagemErro(
-                        mensagem: widget.controller.mensagemErro!,
-                        aoTentarNovamente: widget.controller.carregar,
-                      )
-                    : _ConteudoDashboard(
-                        controller: widget.controller,
-                        resumo: resumo!,
-                        aoEscolherMes: _escolherMes,
-                        aoVerTodas: widget.onAbrirMovimentacoes,
-                      ),
+                ? _MensagemErro(
+                    mensagem: widget.controller.mensagemErro!,
+                    aoTentarNovamente: widget.controller.carregar,
+                  )
+                : _ConteudoDashboard(
+                    controller: widget.controller,
+                    resumo: resumo!,
+                    aoEscolherMes: _escolherMes,
+                    aoVerTodas: widget.onAbrirMovimentacoes,
+                  ),
           ),
         );
       },
@@ -154,7 +154,12 @@ class _ConteudoDashboard extends StatelessWidget {
 
   String get _saudacao {
     final nome = controller.perfil?.nome.trim();
-    return (nome == null || nome.isEmpty) ? 'Olá!' : 'Olá, $nome!';
+    if (nome == null || nome.isEmpty) return 'Olá!';
+
+    final partes = nome.split(RegExp(r'\s+'));
+    final doisPrimeiros = partes.take(2).join(' ');
+
+    return 'Olá, $doisPrimeiros!';
   }
 
   @override

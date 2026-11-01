@@ -176,6 +176,24 @@ class FakeCategoriaRepository implements CategoriaRepository {
     dados.add(categoria);
     return categoria;
   }
+
+  @override
+  Future<void> atualizar(Categoria categoria) async {
+    final indice = dados.indexWhere((c) => c.id == categoria.id);
+    if (indice != -1) {
+      dados[indice] = categoria;
+    }
+  }
+
+  @override
+  Future<bool> excluir(String id) async {
+    final indice = dados.indexWhere((c) => c.id == id);
+    if (indice == -1) return false;
+    final categoria = dados[indice];
+    if (categoria.isPadrao) return false;
+    dados.removeAt(indice);
+    return true;
+  }
 }
 
 class FakeRelatorioRepository implements RelatorioRepository {
@@ -223,6 +241,7 @@ DependenciasApp _criarDependencias(FakeAutenticacaoRepository autenticacao) {
     restaurarTransacaoUseCase: RestaurarTransacaoUseCase(transacoes),
     criarCategoriaUseCase: CriarCategoriaUseCase(categorias),
     listarCategoriasPorTipoUseCase: ListarCategoriasPorTipoUseCase(categorias),
+    categoriaRepository: categorias,
     obterTotaisUseCase: ObterTotaisUseCase(relatorios),
     obterGastosPorCategoriaUseCase: ObterGastosPorCategoriaUseCase(relatorios),
     obterEvolucaoMensalUseCase: ObterEvolucaoMensalUseCase(relatorios),

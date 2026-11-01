@@ -3,6 +3,7 @@ import 'features/autenticacao/domain/usecases/login_usecase.dart';
 import 'features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/verificar_perfil_usecase.dart';
+import 'features/categorias/domain/repositories/categoria_repository.dart';
 import 'features/categorias/domain/usecases/criar_categoria_usecase.dart';
 import 'features/categorias/domain/usecases/listar_categorias_por_tipo_usecase.dart';
 import 'features/dashboard/domain/usecases/obter_resumo_dashboard_usecase.dart';
@@ -19,37 +20,59 @@ import 'features/transacoes/domain/usecases/salvar_transacao_usecase.dart';
 /// É montado exclusivamente na raiz (`main.dart`) e entregue ao `MeuBolsoApp`
 /// por construtor, evitando service locators globais.
 class DependenciasApp {
-  final VerificarPerfilUseCase verificarPerfilUseCase;
-  final CadastrarPerfilUseCase cadastrarPerfilUseCase;
-  final LoginUseCase loginUseCase;
-  final ObterPerfilUseCase obterPerfilUseCase;
-  final LogoutUseCase logoutUseCase;
-  final ObterResumoDashboardUseCase obterResumoDashboardUseCase;
-  final SalvarTransacaoUseCase salvarTransacaoUseCase;
-  final ListarTransacoesUseCase listarTransacoesUseCase;
-  final ExcluirTransacaoUseCase excluirTransacaoUseCase;
-  final RestaurarTransacaoUseCase restaurarTransacaoUseCase;
-  final CriarCategoriaUseCase criarCategoriaUseCase;
-  final ListarCategoriasPorTipoUseCase listarCategoriasPorTipoUseCase;
-  final ObterTotaisUseCase obterTotaisUseCase;
-  final ObterGastosPorCategoriaUseCase obterGastosPorCategoriaUseCase;
-  final ObterEvolucaoMensalUseCase obterEvolucaoMensalUseCase;
+  final VerificarPerfilUseCase? verificarPerfilUseCase;
+  final CadastrarPerfilUseCase? cadastrarPerfilUseCase;
+  final LoginUseCase? loginUseCase;
+  final ObterPerfilUseCase? obterPerfilUseCase;
+  final LogoutUseCase? logoutUseCase;
+  final ObterResumoDashboardUseCase? obterResumoDashboardUseCase;
+  final SalvarTransacaoUseCase? salvarTransacaoUseCase;
+  final ListarTransacoesUseCase? listarTransacoesUseCase;
+  final ExcluirTransacaoUseCase? excluirTransacaoUseCase;
+  final RestaurarTransacaoUseCase? restaurarTransacaoUseCase;
+  final CriarCategoriaUseCase? criarCategoriaUseCase;
+  final ListarCategoriasPorTipoUseCase? listarCategoriasPorTipoUseCase;
+  final CategoriaRepository? categoriaRepository;
+  final ObterTotaisUseCase? obterTotaisUseCase;
+  final ObterGastosPorCategoriaUseCase? obterGastosPorCategoriaUseCase;
+  final ObterEvolucaoMensalUseCase? obterEvolucaoMensalUseCase;
 
   const DependenciasApp({
-    required this.verificarPerfilUseCase,
-    required this.cadastrarPerfilUseCase,
-    required this.loginUseCase,
-    required this.obterPerfilUseCase,
-    required this.logoutUseCase,
-    required this.obterResumoDashboardUseCase,
-    required this.salvarTransacaoUseCase,
-    required this.listarTransacoesUseCase,
-    required this.excluirTransacaoUseCase,
-    required this.restaurarTransacaoUseCase,
-    required this.criarCategoriaUseCase,
-    required this.listarCategoriasPorTipoUseCase,
-    required this.obterTotaisUseCase,
-    required this.obterGastosPorCategoriaUseCase,
-    required this.obterEvolucaoMensalUseCase,
+    this.verificarPerfilUseCase,
+    this.cadastrarPerfilUseCase,
+    this.loginUseCase,
+    this.obterPerfilUseCase,
+    this.logoutUseCase,
+    this.obterResumoDashboardUseCase,
+    this.salvarTransacaoUseCase,
+    this.listarTransacoesUseCase,
+    this.excluirTransacaoUseCase,
+    this.restaurarTransacaoUseCase,
+    this.criarCategoriaUseCase,
+    this.listarCategoriasPorTipoUseCase,
+    this.categoriaRepository,
+    this.obterTotaisUseCase,
+    this.obterGastosPorCategoriaUseCase,
+    this.obterEvolucaoMensalUseCase,
   });
+
+  /// Construtor de fallback usado quando a inicialização falha.
+  /// Todas as dependências são nulas; o aplicativo exibe apenas a tela de erro.
+  const DependenciasApp.vazia()
+      : verificarPerfilUseCase = null,
+        cadastrarPerfilUseCase = null,
+        loginUseCase = null,
+        obterPerfilUseCase = null,
+        logoutUseCase = null,
+        obterResumoDashboardUseCase = null,
+        salvarTransacaoUseCase = null,
+        listarTransacoesUseCase = null,
+        excluirTransacaoUseCase = null,
+        restaurarTransacaoUseCase = null,
+        criarCategoriaUseCase = null,
+        listarCategoriasPorTipoUseCase = null,
+        categoriaRepository = null,
+        obterTotaisUseCase = null,
+        obterGastosPorCategoriaUseCase = null,
+        obterEvolucaoMensalUseCase = null;
 }
