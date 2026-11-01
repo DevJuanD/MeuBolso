@@ -71,7 +71,7 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
         .map(
           (categoria) => CategoriaFinanceira(
             nome: categoria.nome,
-            icone: iconeParaCategoria(categoria.nome),
+            icone: iconeParaCategoria(categoria.iconeId),
             cor: AppColors.primary,
           ),
         )

@@ -71,7 +71,7 @@ class _ReceitaFormPageState extends State<ReceitaFormPage> {
         .map(
           (categoria) => CategoriaFinanceira(
             nome: categoria.nome,
-            icone: iconeParaCategoria(categoria.nome),
+            icone: iconeParaCategoria(categoria.iconeId),
             cor: AppColors.primary,
           ),
         )

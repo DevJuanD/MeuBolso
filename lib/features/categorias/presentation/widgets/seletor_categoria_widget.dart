@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/icone_categoria.dart';
 import '../../../core/domain/enums/tipo_transacao.dart';
 import '../../domain/entities/categoria.dart';
 import '../../domain/usecases/criar_categoria_usecase.dart';
 import '../../domain/usecases/listar_categorias_por_tipo_usecase.dart';
 import 'modal_nova_categoria.dart';
 
-/// Componente visual reutilizável para seleção de categoria financeira.
-///
-/// Exibe a lista de opções com o botão fixo "+ Criar novo tipo" ao final e
-/// integra a abertura do modal de criação e feedback imediato por chips.
 class SeletorCategoriaWidget extends StatefulWidget {
   final TipoTransacao tipo;
   final String? categoriaSelecionada;
@@ -39,8 +36,12 @@ class SeletorCategoriaWidget extends StatefulWidget {
 
 class _SeletorCategoriaWidgetState extends State<SeletorCategoriaWidget> {
   final LayerLink _layerLink = LayerLink();
+  final ScrollController _scrollController = ScrollController();
   OverlayEntry? _overlayEntry;
   double _largura = 300;
+
+  static const double _alturaItem = 43;
+  static const int _itensVisiveis = 3;
 
   List<Categoria> _categorias = [];
   String? _categoriaAtual;
@@ -76,6 +77,7 @@ class _SeletorCategoriaWidgetState extends State<SeletorCategoriaWidget> {
   void dispose() {
     _overlayEntry?.remove();
     _overlayEntry = null;
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -141,86 +143,108 @@ class _SeletorCategoriaWidgetState extends State<SeletorCategoriaWidget> {
                       ),
                     ],
                   ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 280),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final categoria in _categorias)
-                            InkWell(
-                              onTap: () {
-                                _fecharOverlay();
-                                _selecionar(categoria);
-                              },
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: 43,
-                                child: Row(
-                                  children: [
-                                    const SizedBox(width: 14),
-                                    Icon(
-                                      widget.tipo.isReceita
-                                          ? Icons.arrow_downward_rounded
-                                          : Icons.arrow_upward_rounded,
-                                      size: 18,
-                                      color: AppColors.primary,
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Text(
-                                        categoria.nome,
-                                        style: TextStyle(
-                                          fontFamily: 'PlusJakartaSans',
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.textPrimary,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Lista com scroll (3 itens visíveis)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: _alturaItem * _itensVisiveis,
+                        ),
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          interactive: true,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.only(right: 10),
+                            physics: const ClampingScrollPhysics(),
+                            itemCount: _categorias.length,
+                            itemExtent: _alturaItem,
+                            itemBuilder: (context, index) {
+                              final categoria = _categorias[index];
+                              return InkWell(
+                                onTap: () {
+                                  _fecharOverlay();
+                                  _selecionar(categoria);
+                                },
+                                borderRadius: BorderRadius.circular(10),
+                                child: SizedBox(
+                                  height: _alturaItem,
+                                  child: Row(
+                                    children: [
+                                      const SizedBox(width: 14),
+                                      Icon(
+                                        iconeParaCategoria(
+                                          categoria.iconeId,
+                                        ),
+                                        size: 18,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Text(
+                                          categoria.nome,
+                                          style: TextStyle(
+                                            fontFamily: 'PlusJakartaSans',
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.textPrimary,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (categoria.nome == _categoriaAtual)
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 12),
-                                        child: Icon(
-                                          Icons.check_rounded,
-                                          size: 18,
-                                          color: AppColors.primary,
+                                      if (categoria.nome == _categoriaAtual)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                          ),
+                                          child: Icon(
+                                            Icons.check_rounded,
+                                            size: 18,
+                                            color: AppColors.primary,
+                                          ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(11),
-                            onTap: () {
-                              _fecharOverlay();
-                              _abrirModalCriacao();
+                              );
                             },
-                            child: Container(
-                              height: 40,
-                              width: double.infinity,
-                              alignment: Alignment.centerLeft,
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              decoration: BoxDecoration(
-                                color: AppColors.primarySoft,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                              child: Text(
-                                '+ Criar novo tipo',
-                                style: TextStyle(
-                                  fontFamily: 'PlusJakartaSans',
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // Botão fixo
+                      InkWell(
+                        borderRadius: BorderRadius.circular(11),
+                        onTap: () {
+                          _fecharOverlay();
+                          _abrirModalCriacao();
+                        },
+                        child: Container(
+                          height: 40,
+                          width: double.infinity,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: Text(
+                            '+ Criar novo tipo',
+                            style: TextStyle(
+                              fontFamily: 'PlusJakartaSans',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -262,7 +286,8 @@ class _SeletorCategoriaWidgetState extends State<SeletorCategoriaWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final dicaPadrao = widget.dica ??
+    final dicaPadrao =
+        widget.dica ??
         (widget.tipo.isReceita
             ? 'Selecione o tipo de receita'
             : 'Selecione o tipo de despesa');
@@ -392,11 +417,7 @@ class _ChipCategoria extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selecionado) ...[
-              Icon(
-                Icons.check_rounded,
-                size: 13,
-                color: AppColors.primary,
-              ),
+              Icon(Icons.check_rounded, size: 13, color: AppColors.primary),
               const SizedBox(width: 4),
             ],
             Text(
