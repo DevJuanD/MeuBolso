@@ -34,6 +34,15 @@ class _TransacoesPageState extends State<TransacoesPage> {
     widget.controller.carregar();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarrega as categorias ao retornar desta tela (ex.: após gerenciar
+    // categorias), para que criações e edições de ícone sejam refletidas
+    // sem reiniciar o app.
+    widget.controller.carregarCategorias();
+  }
+
   Future<void> _abrirSeletorTipo() async {
     final opcao = await showModalBottomSheet<String>(
       context: context,
@@ -228,7 +237,9 @@ class _TransacoesPageState extends State<TransacoesPage> {
                                     comSinal: true,
                                   ),
                                   icon: iconeParaCategoria(
-                                    transacoes[i].categoria,
+                                    controller.iconeIdDaTransacao(
+                                      transacoes[i],
+                                    ),
                                   ),
                                   isExpense: transacoes[i].isDespesa,
                                   showDivider: i < transacoes.length - 1,

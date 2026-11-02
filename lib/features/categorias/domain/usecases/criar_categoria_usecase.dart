@@ -12,6 +12,7 @@ class CriarCategoriaUseCase {
   Future<Categoria> call({
     required String nome,
     required TipoTransacao tipo,
+    String iconeId = 'default',
   }) async {
     final nomeLimpo = nome.trim();
     if (nomeLimpo.isEmpty) {
@@ -30,11 +31,13 @@ class CriarCategoriaUseCase {
     }
 
     final id = 'cat_${tipo.name}_${DateTime.now().microsecondsSinceEpoch}';
+    final iconeFinal = iconeId.isNotEmpty ? iconeId : 'default';
     final novaCategoria = Categoria(
       id: id,
       nome: nomeFormatado,
       tipo: tipo,
       isPadrao: false,
+      iconeId: iconeFinal,
     );
 
     return _repositorio.salvar(novaCategoria);

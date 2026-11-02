@@ -42,12 +42,12 @@ class TransacoesController extends ChangeNotifier {
     required ListarCategoriasPorTipoUseCase listarCategoriasPorTipoUseCase,
     this.aoAlterarDados,
     this.navigatorKey,
-  })  : _salvarTransacaoUseCase = salvarTransacaoUseCase,
-        _listarTransacoesUseCase = listarTransacoesUseCase,
-        _excluirTransacaoUseCase = excluirTransacaoUseCase,
-        _restaurarTransacaoUseCase = restaurarTransacaoUseCase,
-        _criarCategoriaUseCase = criarCategoriaUseCase,
-        _listarCategoriasPorTipoUseCase = listarCategoriasPorTipoUseCase;
+  }) : _salvarTransacaoUseCase = salvarTransacaoUseCase,
+       _listarTransacoesUseCase = listarTransacoesUseCase,
+       _excluirTransacaoUseCase = excluirTransacaoUseCase,
+       _restaurarTransacaoUseCase = restaurarTransacaoUseCase,
+       _criarCategoriaUseCase = criarCategoriaUseCase,
+       _listarCategoriasPorTipoUseCase = listarCategoriasPorTipoUseCase;
 
   bool _carregando = false;
   bool _salvando = false;
@@ -78,9 +78,11 @@ class TransacoesController extends ChangeNotifier {
   List<Transacao> get despesas =>
       List.unmodifiable(_transacoes.where((t) => t.isDespesa));
 
-  List<Categoria> get categoriasReceita => List.unmodifiable(_categoriasReceita);
+  List<Categoria> get categoriasReceita =>
+      List.unmodifiable(_categoriasReceita);
 
-  List<Categoria> get categoriasDespesa => List.unmodifiable(_categoriasDespesa);
+  List<Categoria> get categoriasDespesa =>
+      List.unmodifiable(_categoriasDespesa);
 
   int get totalReceitasCentavos => _transacoes
       .where((t) => t.isReceita)
@@ -93,6 +95,20 @@ class TransacoesController extends ChangeNotifier {
   int get saldoCentavos => totalReceitasCentavos - totalDespesasCentavos;
 
   Transacao? get ultimaExcluida => _ultimaExcluida;
+
+  /// Resolve o iconeId de uma transação a partir da categoria cadastrada.
+  /// Prefere o id (estável mesmo se a categoria for renomeada) e cai para o nome.
+  String iconeIdDaTransacao(Transacao transacao) {
+    final todas = [..._categoriasReceita, ..._categoriasDespesa];
+
+    for (final c in todas) {
+      if (c.id == transacao.categoriaId) return c.iconeId;
+    }
+    for (final c in todas) {
+      if (c.nome == transacao.categoria) return c.iconeId;
+    }
+    return 'default';
+  }
 
   /// Carrega transações do mês de referência e as categorias persistidas.
   Future<void> carregar({DateTime? mes}) async {
@@ -125,10 +141,18 @@ class TransacoesController extends ChangeNotifier {
   }
 
   /// Cria uma categoria persistida e devolve a entidade criada.
-  Future<Categoria?> criarCategoria(String nome, TipoTransacao tipo) async {
+  Future<Categoria?> criarCategoria(
+    String nome,
+    TipoTransacao tipo, {
+    String iconeId = 'default',
+  }) async {
     _mensagemErro = null;
     try {
-      final categoria = await _criarCategoriaUseCase(nome: nome, tipo: tipo);
+      final categoria = await _criarCategoriaUseCase(
+        nome: nome,
+        tipo: tipo,
+        iconeId: iconeId,
+      );
       await _carregarCategoriasInterno();
       notifyListeners();
       return categoria;
@@ -236,8 +260,9 @@ class TransacoesController extends ChangeNotifier {
   }) async {
     if (_salvando) return false;
 
-    final valorCentavos =
-        FormatadorMoeda.converterTextoParaCentavos(valorFormatado);
+    final valorCentavos = FormatadorMoeda.converterTextoParaCentavos(
+      valorFormatado,
+    );
     if (valorCentavos <= 0) {
       _mensagemErro = 'Informe um valor maior que zero.';
       notifyListeners();

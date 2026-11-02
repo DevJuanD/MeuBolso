@@ -57,7 +57,11 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
 
   Future<void> _criarCategoria(TipoTransacao tipo) async {
     Future<Categoria?> salva(String nome, String iconeId) async {
-      return widget.criarUseCase(nome: nome, tipo: tipo);
+      return widget.criarUseCase(
+        nome: nome,
+        tipo: tipo,
+        iconeId: iconeId,
+      );
     }
 
     final resultado = await mostrarModalFormCategoria(context, aoSalvar: salva);
