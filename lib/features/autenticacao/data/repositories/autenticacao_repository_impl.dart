@@ -70,6 +70,35 @@ class AutenticacaoRepositoryImpl implements AutenticacaoRepository {
     await _dataSource.deletarPerfil();
   }
 
+  @override
+  Future<void> atualizarPerfil({
+    required String nome,
+    required String email,
+    String? senhaClara,
+  }) async {
+    final perfilExistente = await _dataSource.obterPerfil();
+    if (perfilExistente == null) {
+      throw const PerfilNaoEncontradoException();
+    }
+
+    String salt = perfilExistente.salt;
+    String verificadorSenha = perfilExistente.verificadorSenha;
+
+    if (senhaClara != null && senhaClara.isNotEmpty) {
+      salt = _gerarSalt();
+      verificadorSenha = _gerarHash(senhaClara, salt);
+    }
+
+    final perfilAtualizado = PerfilLocalModel(
+      nome: nome.trim(),
+      email: email.trim(),
+      salt: salt,
+      verificadorSenha: verificadorSenha,
+    );
+
+    await _dataSource.salvarPerfil(perfilAtualizado);
+  }
+
   String _gerarSalt([int tamanhoBytes = 16]) {
     final geradorAleatorio = Random.secure();
     final bytes = List<int>.generate(

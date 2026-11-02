@@ -16,4 +16,13 @@ abstract class AutenticacaoRepository {
 
   /// Remove o perfil atual do dispositivo, desvinculando as credenciais locais.
   Future<void> realizarLogout();
+
+  /// Atualiza os dados do perfil (nome, e-mail e senha opcional).
+  ///
+  /// Quando [senhaClara] for nula ou vazia, a senha atual é mantida.
+  Future<void> atualizarPerfil({
+    required String nome,
+    required String email,
+    String? senhaClara,
+  });
 }

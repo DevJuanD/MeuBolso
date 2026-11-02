@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/perfil_local.dart';
 import '../../domain/exceptions/falhas_autenticacao.dart';
+import '../../domain/usecases/atualizar_perfil_usecase.dart';
 import '../../domain/usecases/cadastrar_perfil_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
@@ -23,6 +24,7 @@ enum ModoAutenticacao {
 class AutenticacaoController extends ChangeNotifier {
   final VerificarPerfilUseCase _verificarPerfilUseCase;
   final CadastrarPerfilUseCase _cadastrarPerfilUseCase;
+  final AtualizarPerfilUseCase _atualizarPerfilUseCase;
   final LoginUseCase _loginUseCase;
   final ObterPerfilUseCase _obterPerfilUseCase;
   final LogoutUseCase _logoutUseCase;
@@ -30,11 +32,13 @@ class AutenticacaoController extends ChangeNotifier {
   AutenticacaoController({
     required VerificarPerfilUseCase verificarPerfilUseCase,
     required CadastrarPerfilUseCase cadastrarPerfilUseCase,
+    required AtualizarPerfilUseCase atualizarPerfilUseCase,
     required LoginUseCase loginUseCase,
     required ObterPerfilUseCase obterPerfilUseCase,
     required LogoutUseCase logoutUseCase,
   })  : _verificarPerfilUseCase = verificarPerfilUseCase,
         _cadastrarPerfilUseCase = cadastrarPerfilUseCase,
+        _atualizarPerfilUseCase = atualizarPerfilUseCase,
         _loginUseCase = loginUseCase,
         _obterPerfilUseCase = obterPerfilUseCase,
         _logoutUseCase = logoutUseCase;
@@ -152,6 +156,38 @@ class AutenticacaoController extends ChangeNotifier {
       return false;
     } catch (_) {
       _mensagemErro = 'Não foi possível sair do perfil.';
+      return false;
+    } finally {
+      _estaCarregando = false;
+      notifyListeners();
+    }
+  }
+
+  /// Atualiza os dados do perfil (nome, e-mail e senha opcional).
+  ///
+  /// Retorna `true` quando a atualização é bem-sucedida.
+  Future<bool> atualizarPerfil({
+    required String nome,
+    required String email,
+    String? senhaClara,
+  }) async {
+    _estaCarregando = true;
+    _mensagemErro = null;
+    notifyListeners();
+
+    try {
+      await _atualizarPerfilUseCase(
+        nome: nome,
+        email: email,
+        senhaClara: senhaClara,
+      );
+      _perfilAtual = await _obterPerfilUseCase();
+      return true;
+    } on FalhaAutenticacao catch (e) {
+      _mensagemErro = e.mensagem;
+      return false;
+    } catch (_) {
+      _mensagemErro = 'Não foi possível atualizar o perfil.';
       return false;
     } finally {
       _estaCarregando = false;
