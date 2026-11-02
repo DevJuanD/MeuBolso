@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatador_moeda.dart';
 import '../../../../core/utils/icone_categoria.dart';
 import '../../../categorias/domain/entities/categoria.dart';
+import '../../../categorias/presentation/widgets/modal_form_categoria.dart';
 import '../../../core/domain/enums/tipo_transacao.dart';
 import '../../../transacoes/domain/entities/transacao.dart';
 import '../../../transacoes/presentation/controllers/transacoes_controller.dart';
@@ -111,18 +112,17 @@ class _DespesaFormPageState extends State<DespesaFormPage> {
   }
 
   Future<void> _criarCategoria() async {
-    final novaCategoria = await mostrarModalNovaCategoria(
+    final novaCategoria = await mostrarModalFormCategoria(
       context,
-      tipo: TipoTransacao.despesa,
-      aoSalvarCustomizado: (nome) =>
-          widget.controller.criarCategoria(nome, TipoTransacao.despesa),
+      aoSalvar: (nome, iconeId) =>
+          widget.controller.criarCategoria(
+            nome,
+            TipoTransacao.despesa,
+            iconeId: iconeId,
+          ),
     );
     if (!mounted) return;
-    if (novaCategoria == null) {
-      final erro = widget.controller.mensagemErro;
-      if (erro != null) _aviso(erro);
-      return;
-    }
+    if (novaCategoria == null) return;
     setState(() {
       _categoriaSelecionada = novaCategoria.nome;
       _mostrarChips = true;

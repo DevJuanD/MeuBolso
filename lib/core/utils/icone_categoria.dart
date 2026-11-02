@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 /// e o respectivo `IconData` do Material Design.
 ///
 /// Caso a chave não esteja cadastrada, o fallback é `Icons.more_horiz_rounded`.
+///
+/// Chaves que não estão mais no seletor (ícones duplicados removidos do pool)
+/// são mantidas aqui como alias para compatibilidade com dados já gravados.
 final Map<String, IconData> iconesPorCategoria = {
   // Ícones neutros / default
   'default': Icons.more_horiz_rounded,
@@ -14,6 +17,8 @@ final Map<String, IconData> iconesPorCategoria = {
   'vendas': Icons.shopping_bag_outlined,
   'rendimentos': Icons.trending_up_rounded,
   'presente': Icons.card_giftcard_rounded,
+  'receita': Icons.arrow_downward_rounded,
+  'despesa': Icons.arrow_upward_rounded,
 
   // Despesas
   'alimentacao': Icons.restaurant_rounded,
@@ -23,6 +28,24 @@ final Map<String, IconData> iconesPorCategoria = {
   'saude': Icons.favorite_border_rounded,
   'lazer': Icons.local_activity_outlined,
   'compras': Icons.shopping_cart_outlined,
+
+  // Adicionais do seletor
+  'energia': Icons.lightbulb_outline_rounded,
+  'educacao': Icons.school_outlined,
+  'pix': Icons.send_rounded,
+  'dinheiro': Icons.attach_money_rounded,
+  'carro': Icons.directions_car_rounded,
+  'roupas': Icons.checkroom_rounded,
+  'livro': Icons.book_outlined,
+  'agua': Icons.local_drink_rounded,
+  'raio': Icons.flash_on_rounded,
+  'cartao': Icons.credit_card_rounded,
+
+  // Alias de chaves removidas do seletor por ícone duplicado
+  // (mantidas para compatibilidade com dados já persistidos).
+  'saude_coracao': Icons.favorite_border_rounded, // alias de 'saude'
+  'ingresso': Icons.local_activity_outlined, // alias de 'lazer'
+  'casa': Icons.home_outlined, // alias de 'moradia'
 };
 
 /// Retorna o `IconData` associado à chave de ícone da categoria.
@@ -53,13 +76,10 @@ final List<Map<String, dynamic>> poolDeIcones = const [
   {'chave': 'pix', 'icone': Icons.send_rounded, 'rotulo': 'Pix / Transferência'},
   {'chave': 'dinheiro', 'icone': Icons.attach_money_rounded, 'rotulo': 'Dinheiro'},
   {'chave': 'carro', 'icone': Icons.directions_car_rounded, 'rotulo': 'Carro'},
-  {'chave': 'saude_coracao', 'icone': Icons.favorite_border_rounded, 'rotulo': 'Saúde / Coração'},
-  {'chave': 'ingresso', 'icone': Icons.local_activity_outlined, 'rotulo': 'Ingresso / Lazer'},
   {'chave': 'roupas', 'icone': Icons.checkroom_rounded, 'rotulo': 'Roupas'},
   {'chave': 'livro', 'icone': Icons.book_outlined, 'rotulo': 'Livro / Educação'},
   {'chave': 'agua', 'icone': Icons.local_drink_rounded, 'rotulo': 'Água'},
   {'chave': 'raio', 'icone': Icons.flash_on_rounded, 'rotulo': 'Raio / Energia'},
-  {'chave': 'casa', 'icone': Icons.home_outlined, 'rotulo': 'Casa'},
   {'chave': 'cartao', 'icone': Icons.credit_card_rounded, 'rotulo': 'Cartão'},
   {'chave': 'receita', 'icone': Icons.arrow_downward_rounded, 'rotulo': 'Receita'},
   {'chave': 'despesa', 'icone': Icons.arrow_upward_rounded, 'rotulo': 'Despesa'},
