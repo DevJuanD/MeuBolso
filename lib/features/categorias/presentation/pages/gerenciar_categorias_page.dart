@@ -60,10 +60,7 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
       return widget.criarUseCase(nome: nome, tipo: tipo);
     }
 
-    final resultado = await mostrarModalFormCategoria(
-      context,
-      aoSalvar: salva,
-    );
+    final resultado = await mostrarModalFormCategoria(context, aoSalvar: salva);
 
     if (resultado != null && mounted) {
       await _carregarAmbas();
@@ -204,10 +201,9 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (ehReceita
-                      ? AppColors.positiveSoft
-                      : AppColors.negativeSoft)
-                  .withValues(alpha: 0.4),
+              color:
+                  (ehReceita ? AppColors.positiveSoft : AppColors.negativeSoft)
+                      .withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -233,20 +229,11 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
             ),
           ),
           trailing: PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: AppColors.textSecondary,
-            ),
+            icon: Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'editar',
-                child: const Text('Editar'),
-              ),
+              PopupMenuItem(value: 'editar', child: const Text('Editar')),
               if (!categoria.isPadrao)
-                PopupMenuItem(
-                  value: 'excluir',
-                  child: const Text('Excluir'),
-                ),
+                PopupMenuItem(value: 'excluir', child: const Text('Excluir')),
             ],
             onSelected: (valor) {
               if (valor == 'editar') {
@@ -262,52 +249,52 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Gerenciar Categorias',
-          style: TextStyle(
-            fontFamily: 'PlusJakartaSans',
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            TabBar(
-              tabs: const [
-                Tab(text: 'Receitas'),
-                Tab(text: 'Despesas'),
-              ],
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primary,
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _listaCategorias(_categoriasReceita),
-                  _listaCategorias(_categoriasDespesa),
+    return DefaultTabController(
+      length: 2,
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              title: const Text(
+                'Gerenciar Categorias',
+                style: TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              centerTitle: true,
+              elevation: 0,
+              bottom: TabBar(
+                tabs: const [
+                  Tab(text: 'Receitas'),
+                  Tab(text: 'Despesas'),
                 ],
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                indicatorColor: AppColors.primary,
               ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final tabIndex = DefaultTabController.of(context).index;
-          final tipo =
-              tabIndex == 0 ? TipoTransacao.receita : TipoTransacao.despesa;
-          _criarCategoria(tipo);
+            body: TabBarView(
+              children: [
+                _listaCategorias(_categoriasReceita),
+                _listaCategorias(_categoriasDespesa),
+              ],
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                final tabIndex = DefaultTabController.of(context).index;
+                final tipo = tabIndex == 0
+                    ? TipoTransacao.receita
+                    : TipoTransacao.despesa;
+                _criarCategoria(tipo);
+              },
+              child: const Icon(Icons.add),
+            ),
+          );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
