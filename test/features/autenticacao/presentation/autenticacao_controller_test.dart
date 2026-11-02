@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_bolso/features/autenticacao/domain/entities/perfil_local.dart';
 import 'package:meu_bolso/features/autenticacao/domain/exceptions/falhas_autenticacao.dart';
 import 'package:meu_bolso/features/autenticacao/domain/repositories/autenticacao_repository.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/atualizar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/logout_usecase.dart';
@@ -40,6 +41,19 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
     perfilArmazenado = null;
     senhaArmazenada = null;
   }
+
+  @override
+  Future<void> atualizarPerfil({
+    required String nome,
+    required String email,
+    String? senhaClara,
+  }) async {
+    if (perfilArmazenado == null) throw const PerfilNaoEncontradoException();
+    perfilArmazenado = PerfilLocal(nome: nome, email: email);
+    if (senhaClara != null && senhaClara.isNotEmpty) {
+      senhaArmazenada = senhaClara;
+    }
+  }
 }
 
 void main() {
@@ -52,6 +66,7 @@ void main() {
       controller = AutenticacaoController(
         verificarPerfilUseCase: VerificarPerfilUseCase(fakeRepo),
         cadastrarPerfilUseCase: CadastrarPerfilUseCase(fakeRepo),
+        atualizarPerfilUseCase: AtualizarPerfilUseCase(fakeRepo),
         loginUseCase: LoginUseCase(fakeRepo),
         obterPerfilUseCase: ObterPerfilUseCase(fakeRepo),
         logoutUseCase: LogoutUseCase(fakeRepo),

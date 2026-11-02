@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_bolso/app.dart';
 import 'package:meu_bolso/dependencias_app.dart';
 import 'package:meu_bolso/features/autenticacao/domain/entities/perfil_local.dart';
+import 'package:meu_bolso/features/autenticacao/domain/exceptions/falhas_autenticacao.dart';
 import 'package:meu_bolso/features/autenticacao/domain/repositories/autenticacao_repository.dart';
+import 'package:meu_bolso/features/autenticacao/domain/usecases/atualizar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/login_usecase.dart';
 import 'package:meu_bolso/features/autenticacao/domain/usecases/logout_usecase.dart';
@@ -52,6 +54,16 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
   @override
   Future<void> realizarLogout() async {
     perfilArmazenado = null;
+  }
+
+  @override
+  Future<void> atualizarPerfil({
+    required String nome,
+    required String email,
+    String? senhaClara,
+  }) async {
+    if (perfilArmazenado == null) throw const PerfilNaoEncontradoException();
+    perfilArmazenado = PerfilLocal(nome: nome, email: email);
   }
 }
 
@@ -229,6 +241,7 @@ DependenciasApp _criarDependencias(FakeAutenticacaoRepository autenticacao) {
   return DependenciasApp(
     verificarPerfilUseCase: VerificarPerfilUseCase(autenticacao),
     cadastrarPerfilUseCase: CadastrarPerfilUseCase(autenticacao),
+    atualizarPerfilUseCase: AtualizarPerfilUseCase(autenticacao),
     loginUseCase: LoginUseCase(autenticacao),
     obterPerfilUseCase: ObterPerfilUseCase(autenticacao),
     logoutUseCase: LogoutUseCase(autenticacao),
