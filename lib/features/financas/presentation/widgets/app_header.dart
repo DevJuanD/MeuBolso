@@ -6,11 +6,13 @@ import '../../../../core/widgets/meubolso_logo.dart';
 class AppHeader extends StatelessWidget {
   final bool showAvatar;
   final String initials;
+  final VoidCallback? onAvatarTap;
 
   const AppHeader({
     super.key,
     this.showAvatar = false,
     this.initials = 'IS',
+    this.onAvatarTap,
   });
 
   @override
@@ -22,20 +24,24 @@ class AppHeader extends StatelessWidget {
           const MeuBolsoLogo(),
           const Spacer(),
           if (showAvatar)
-            Container(
-              width: 39,
-              height: 39,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFF6C5DD3),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                initials,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+            InkWell(
+              onTap: onAvatarTap,
+              borderRadius: BorderRadius.circular(39),
+              child: Container(
+                width: 39,
+                height: 39,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF6C5DD3),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),

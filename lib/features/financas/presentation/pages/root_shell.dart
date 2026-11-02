@@ -17,6 +17,7 @@ class RootShell extends StatefulWidget {
   final TransacoesController transacoesController;
   final RelatorioController relatorioController;
   final int abaInicial;
+  final VoidCallback? onAbrirPerfil;
 
   const RootShell({
     super.key,
@@ -26,6 +27,7 @@ class RootShell extends StatefulWidget {
     required this.transacoesController,
     required this.relatorioController,
     this.abaInicial = 0,
+    this.onAbrirPerfil,
   });
 
   @override
@@ -244,6 +246,7 @@ class _RootShellState extends State<RootShell> {
           controller: widget.dashboardController,
           onAbrirMovimentacoes: _abrirMovimentacoes,
           onAbaSelecionada: _selecionarAba,
+          onAbrirPerfil: widget.onAbrirPerfil,
         );
     }
   }

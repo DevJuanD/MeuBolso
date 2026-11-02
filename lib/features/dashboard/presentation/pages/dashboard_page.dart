@@ -15,12 +15,14 @@ class DashboardPage extends StatefulWidget {
   final DashboardController controller;
   final VoidCallback onAbrirMovimentacoes;
   final ValueChanged<int> onAbaSelecionada;
+  final VoidCallback? onAbrirPerfil;
 
   const DashboardPage({
     super.key,
     required this.controller,
     required this.onAbrirMovimentacoes,
     required this.onAbaSelecionada,
+    this.onAbrirPerfil,
   });
 
   @override
@@ -131,6 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     resumo: resumo!,
                     aoEscolherMes: _escolherMes,
                     aoVerTodas: widget.onAbrirMovimentacoes,
+                    onAbrirPerfil: widget.onAbrirPerfil,
                   ),
           ),
         );
@@ -144,12 +147,14 @@ class _ConteudoDashboard extends StatelessWidget {
   final ResumoMensal resumo;
   final VoidCallback aoEscolherMes;
   final VoidCallback aoVerTodas;
+  final VoidCallback? onAbrirPerfil;
 
   const _ConteudoDashboard({
     required this.controller,
     required this.resumo,
     required this.aoEscolherMes,
     required this.aoVerTodas,
+    this.onAbrirPerfil,
   });
 
   String get _saudacao {
@@ -173,6 +178,7 @@ class _ConteudoDashboard extends StatelessWidget {
           AppHeader(
             showAvatar: true,
             initials: _iniciais(controller.perfil?.nome),
+            onAvatarTap: onAbrirPerfil,
           ),
           Text(
             'VISÃO GERAL',
