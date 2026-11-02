@@ -6,6 +6,7 @@ import 'core/database/banco_de_dados.dart';
 import 'dependencias_app.dart';
 import 'features/autenticacao/data/datasources/autenticacao_local_datasource.dart';
 import 'features/autenticacao/data/repositories/autenticacao_repository_impl.dart';
+import 'features/autenticacao/domain/usecases/atualizar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
 import 'features/autenticacao/domain/usecases/logout_usecase.dart';
@@ -38,12 +39,11 @@ Future<void> main() async {
   Exception? erroInicializacao;
 
   try {
-    // 1. Inicializa o banco de dados SQLite (inclui migrações de esquema).
+    // Inicializa o banco de dados SQLite (inclui migrações de esquema).
     debugPrint('[MeuBolso] Inicializando banco de dados SQLite...');
     await BancoDeDados.obterInstancia();
     debugPrint('[MeuBolso] Banco de dados SQLite inicializado com sucesso.');
 
-    // 2. Instancia storage seguro e fontes de dados / repositórios.
     const storage = FlutterSecureStorage();
 
     const autenticacaoDataSource = AutenticacaoLocalDataSource(storage);
@@ -52,7 +52,9 @@ Future<void> main() async {
     );
 
     const transacoesDataSource = TransacoesLocalDataSource();
-    const transacoesRepositorio = TransacoesRepositoryImpl(transacoesDataSource);
+    const transacoesRepositorio = TransacoesRepositoryImpl(
+      transacoesDataSource,
+    );
 
     const categoriasDataSource = CategoriasLocalDataSource();
     const categoriasRepositorio = CategoriaRepositoryImpl(categoriasDataSource);
@@ -64,13 +66,20 @@ Future<void> main() async {
     const dashboardDataSource = DashboardLocalDataSource();
     const dashboardRepositorio = DashboardRepositoryImpl(dashboardDataSource);
 
-    // 3. Inicializa a aplicação com as dependências injetadas.
+    // Inicializa a aplicação com as dependências injetadas.
     debugPrint('[MeuBolso] Iniciando aplicação...');
     runApp(
       MeuBolsoApp(
         dependencias: DependenciasApp(
-          verificarPerfilUseCase: VerificarPerfilUseCase(autenticacaoRepositorio),
-          cadastrarPerfilUseCase: CadastrarPerfilUseCase(autenticacaoRepositorio),
+          verificarPerfilUseCase: VerificarPerfilUseCase(
+            autenticacaoRepositorio,
+          ),
+          cadastrarPerfilUseCase: CadastrarPerfilUseCase(
+            autenticacaoRepositorio,
+          ),
+          atualizarPerfilUseCase: AtualizarPerfilUseCase(
+            autenticacaoRepositorio,
+          ),
           loginUseCase: LoginUseCase(autenticacaoRepositorio),
           obterPerfilUseCase: ObterPerfilUseCase(autenticacaoRepositorio),
           logoutUseCase: LogoutUseCase(autenticacaoRepositorio),
@@ -78,10 +87,15 @@ Future<void> main() async {
             dashboardRepositorio,
           ),
           salvarTransacaoUseCase: SalvarTransacaoUseCase(transacoesRepositorio),
-          listarTransacoesUseCase: ListarTransacoesUseCase(transacoesRepositorio),
-          excluirTransacaoUseCase: ExcluirTransacaoUseCase(transacoesRepositorio),
-          restaurarTransacaoUseCase:
-              RestaurarTransacaoUseCase(transacoesRepositorio),
+          listarTransacoesUseCase: ListarTransacoesUseCase(
+            transacoesRepositorio,
+          ),
+          excluirTransacaoUseCase: ExcluirTransacaoUseCase(
+            transacoesRepositorio,
+          ),
+          restaurarTransacaoUseCase: RestaurarTransacaoUseCase(
+            transacoesRepositorio,
+          ),
           criarCategoriaUseCase: CriarCategoriaUseCase(categoriasRepositorio),
           listarCategoriasPorTipoUseCase: ListarCategoriasPorTipoUseCase(
             categoriasRepositorio,
@@ -99,9 +113,7 @@ Future<void> main() async {
     );
     debugPrint('[MeuBolso] Aplicação iniciada com sucesso.');
   } catch (erro, stackTrace) {
-    // Qualquer falha durante a inicialização assíncrona é capturada aqui para
-    // evitar a "tela branca". O erro é logado para diagnóstico e a aplicação
-    // ainda é executada, exibindo uma tela de erro ao usuário.
+    // Qualquer falha durante a inicialização assíncrona é capturada aqui.
     erroInicializacao = erro is Exception ? erro : Exception(erro.toString());
     debugPrint('[MeuBolso] ERRO CRÍTICO na inicialização: $erroInicializacao');
     debugPrint('StackTrace: $stackTrace');

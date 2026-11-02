@@ -10,4 +10,5 @@ abstract final class RotasApp {
   static const receitaForm = '/receita';
   static const despesaForm = '/despesa';
   static const gerenciarCategorias = '/gerenciar-categorias';
+static const perfil = '/perfil';
 }

@@ -1,3 +1,4 @@
+import 'features/autenticacao/domain/usecases/atualizar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
 import 'features/autenticacao/domain/usecases/logout_usecase.dart';
@@ -22,6 +23,7 @@ import 'features/transacoes/domain/usecases/salvar_transacao_usecase.dart';
 class DependenciasApp {
   final VerificarPerfilUseCase? verificarPerfilUseCase;
   final CadastrarPerfilUseCase? cadastrarPerfilUseCase;
+  final AtualizarPerfilUseCase? atualizarPerfilUseCase;
   final LoginUseCase? loginUseCase;
   final ObterPerfilUseCase? obterPerfilUseCase;
   final LogoutUseCase? logoutUseCase;
@@ -40,6 +42,7 @@ class DependenciasApp {
   const DependenciasApp({
     this.verificarPerfilUseCase,
     this.cadastrarPerfilUseCase,
+    this.atualizarPerfilUseCase,
     this.loginUseCase,
     this.obterPerfilUseCase,
     this.logoutUseCase,
@@ -61,6 +64,7 @@ class DependenciasApp {
   const DependenciasApp.vazia()
       : verificarPerfilUseCase = null,
         cadastrarPerfilUseCase = null,
+        atualizarPerfilUseCase = null,
         loginUseCase = null,
         obterPerfilUseCase = null,
         logoutUseCase = null,

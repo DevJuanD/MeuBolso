@@ -15,6 +15,7 @@ import 'features/financas/presentation/pages/movimentacoes_page.dart';
 import 'features/financas/presentation/pages/receita_form_page.dart';
 import 'features/financas/presentation/pages/receitas_page.dart';
 import 'features/financas/presentation/pages/root_shell.dart';
+import 'features/perfil/presentation/pages/perfil_page.dart';
 import 'features/relatorios/presentation/controllers/relatorio_controller.dart';
 import 'features/transacoes/domain/entities/transacao.dart';
 import 'features/transacoes/presentation/controllers/transacoes_controller.dart';
@@ -61,6 +62,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
     _autenticacaoController = AutenticacaoController(
       verificarPerfilUseCase: dependencias.verificarPerfilUseCase!,
       cadastrarPerfilUseCase: dependencias.cadastrarPerfilUseCase!,
+      atualizarPerfilUseCase: dependencias.atualizarPerfilUseCase!,
       loginUseCase: dependencias.loginUseCase!,
       obterPerfilUseCase: dependencias.obterPerfilUseCase!,
       logoutUseCase: dependencias.logoutUseCase!,
@@ -134,7 +136,12 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
       transacoesController: _transacoesController!,
       relatorioController: _relatorioController!,
       abaInicial: abaInicial,
+      onAbrirPerfil: _abrirPerfil,
     );
+  }
+
+  void _abrirPerfil() {
+    _navigatorKey.currentState?.pushNamed(RotasApp.perfil);
   }
 
   Route<dynamic>? _gerarRota(RouteSettings settings) {
@@ -256,6 +263,9 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
         RotasApp.inicio: (_) => _shell(0),
         RotasApp.transacoes: (_) => _shell(1),
         RotasApp.relatorios: (_) => _shell(2),
+        RotasApp.perfil: (context) => PerfilPage(
+              controller: _autenticacaoController!,
+            ),
       },
       onGenerateRoute: _gerarRota,
     );
