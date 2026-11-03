@@ -1,5 +1,6 @@
 import 'features/autenticacao/domain/usecases/atualizar_perfil_usecase.dart';
 import 'features/autenticacao/domain/usecases/cadastrar_perfil_usecase.dart';
+import 'features/relatorios/presentation/services/pdf_relatorio_generator.dart';
 import 'features/autenticacao/domain/usecases/login_usecase.dart';
 import 'features/autenticacao/domain/usecases/logout_usecase.dart';
 import 'features/autenticacao/domain/usecases/obter_perfil_usecase.dart';
@@ -38,6 +39,7 @@ class DependenciasApp {
   final ObterTotaisUseCase? obterTotaisUseCase;
   final ObterGastosPorCategoriaUseCase? obterGastosPorCategoriaUseCase;
   final ObterEvolucaoMensalUseCase? obterEvolucaoMensalUseCase;
+  final PdfRelatorioGenerator? pdfRelatorioGenerator;
 
   const DependenciasApp({
     this.verificarPerfilUseCase,
@@ -57,6 +59,7 @@ class DependenciasApp {
     this.obterTotaisUseCase,
     this.obterGastosPorCategoriaUseCase,
     this.obterEvolucaoMensalUseCase,
+    this.pdfRelatorioGenerator,
   });
 
   /// Construtor de fallback usado quando a inicialização falha.
@@ -78,5 +81,6 @@ class DependenciasApp {
         categoriaRepository = null,
         obterTotaisUseCase = null,
         obterGastosPorCategoriaUseCase = null,
-        obterEvolucaoMensalUseCase = null;
+        obterEvolucaoMensalUseCase = null,
+        pdfRelatorioGenerator = null;
 }

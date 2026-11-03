@@ -80,6 +80,7 @@ class _MeuBolsoAppState extends State<MeuBolsoApp> {
       listarTransacoesUseCase: dependencias.listarTransacoesUseCase!,
       listarCategoriasPorTipoUseCase:
           dependencias.listarCategoriasPorTipoUseCase!,
+      pdfRelatorioGenerator: dependencias.pdfRelatorioGenerator!,
     );
 
     _transacoesController = TransacoesController(
