@@ -57,11 +57,7 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
 
   Future<void> _criarCategoria(TipoTransacao tipo) async {
     Future<Categoria?> salva(String nome, String iconeId) async {
-      return widget.criarUseCase(
-        nome: nome,
-        tipo: tipo,
-        iconeId: iconeId,
-      );
+      return widget.criarUseCase(nome: nome, tipo: tipo, iconeId: iconeId);
     }
 
     final resultado = await mostrarModalFormCategoria(context, aoSalvar: salva);
@@ -279,6 +275,7 @@ class _GerenciarCategoriasPageState extends State<GerenciarCategoriasPage> {
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textSecondary,
                 indicatorColor: AppColors.primary,
+                dividerColor: Colors.transparent,
               ),
             ),
             body: TabBarView(
