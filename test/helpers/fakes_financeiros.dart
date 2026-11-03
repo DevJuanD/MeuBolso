@@ -14,6 +14,7 @@ import 'package:meu_bolso/features/relatorios/domain/usecases/obter_evolucao_men
 import 'package:meu_bolso/features/relatorios/domain/usecases/obter_gastos_por_categoria_usecase.dart';
 import 'package:meu_bolso/features/relatorios/domain/usecases/obter_totais_usecase.dart';
 import 'package:meu_bolso/features/relatorios/presentation/controllers/relatorio_controller.dart';
+import 'package:meu_bolso/features/relatorios/presentation/services/pdf_relatorio_generator.dart';
 import 'package:meu_bolso/features/transacoes/domain/entities/transacao.dart';
 import 'package:meu_bolso/features/transacoes/domain/repositories/transacoes_repository.dart';
 import 'package:meu_bolso/features/transacoes/domain/usecases/excluir_transacao_usecase.dart';
@@ -228,5 +229,21 @@ RelatorioController criarRelatorioController({
     obterEvolucaoMensalUseCase: ObterEvolucaoMensalUseCase(relatorios),
     listarTransacoesUseCase: ListarTransacoesUseCase(transacoes),
     listarCategoriasPorTipoUseCase: ListarCategoriasPorTipoUseCase(categorias),
+    pdfRelatorioGenerator: FakePdfRelatorioGenerator(),
   );
+}
+
+/// Fake do [PdfRelatorioGenerator] para testes.
+class FakePdfRelatorioGenerator implements PdfRelatorioGenerator {
+  @override
+  Future<void> gerarECompartilhar({
+    required List<Map<String, dynamic>> receitas,
+    required List<Map<String, dynamic>> despesas,
+    required int totalReceitasCentavos,
+    required int totalDespesasCentavos,
+    required int saldoCentavos,
+    required String mesAno,
+  }) async {
+    // Não faz nada nos testes.
+  }
 }

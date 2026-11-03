@@ -27,6 +27,7 @@ import 'package:meu_bolso/features/relatorios/domain/repositories/relatorio_repo
 import 'package:meu_bolso/features/relatorios/domain/usecases/obter_evolucao_mensal_usecase.dart';
 import 'package:meu_bolso/features/relatorios/domain/usecases/obter_gastos_por_categoria_usecase.dart';
 import 'package:meu_bolso/features/relatorios/domain/usecases/obter_totais_usecase.dart';
+import 'package:meu_bolso/features/relatorios/presentation/services/pdf_relatorio_generator.dart';
 import 'package:meu_bolso/features/transacoes/domain/entities/transacao.dart';
 import 'package:meu_bolso/features/transacoes/domain/repositories/transacoes_repository.dart';
 import 'package:meu_bolso/features/transacoes/domain/usecases/excluir_transacao_usecase.dart';
@@ -64,6 +65,21 @@ class FakeAutenticacaoRepository implements AutenticacaoRepository {
   }) async {
     if (perfilArmazenado == null) throw const PerfilNaoEncontradoException();
     perfilArmazenado = PerfilLocal(nome: nome, email: email);
+  }
+}
+
+/// Fake do [PdfRelatorioGenerator] para testes.
+class FakePdfRelatorioGenerator implements PdfRelatorioGenerator {
+  @override
+  Future<void> gerarECompartilhar({
+    required List<Map<String, dynamic>> receitas,
+    required List<Map<String, dynamic>> despesas,
+    required int totalReceitasCentavos,
+    required int totalDespesasCentavos,
+    required int saldoCentavos,
+    required String mesAno,
+  }) async {
+    // Não faz nada nos testes.
   }
 }
 
@@ -258,6 +274,7 @@ DependenciasApp _criarDependencias(FakeAutenticacaoRepository autenticacao) {
     obterTotaisUseCase: ObterTotaisUseCase(relatorios),
     obterGastosPorCategoriaUseCase: ObterGastosPorCategoriaUseCase(relatorios),
     obterEvolucaoMensalUseCase: ObterEvolucaoMensalUseCase(relatorios),
+    pdfRelatorioGenerator: FakePdfRelatorioGenerator(),
   );
 }
 
