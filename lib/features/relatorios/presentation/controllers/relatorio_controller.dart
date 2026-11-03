@@ -7,6 +7,7 @@ import '../../../categorias/domain/usecases/listar_categorias_por_tipo_usecase.d
 import '../../../core/domain/enums/tipo_transacao.dart';
 import '../../../financas/domain/models/movimentacao.dart';
 import '../../../financas/domain/models/relatorio.dart';
+import '../../../relatorios/presentation/services/pdf_relatorio_generator.dart';
 import '../../../transacoes/domain/entities/transacao.dart';
 import '../../../transacoes/domain/usecases/listar_transacoes_usecase.dart';
 import '../../domain/entities/evolucao_mensal.dart';
@@ -27,6 +28,7 @@ class RelatorioController extends ChangeNotifier {
   final ObterEvolucaoMensalUseCase _obterEvolucaoMensalUseCase;
   final ListarTransacoesUseCase _listarTransacoesUseCase;
   final ListarCategoriasPorTipoUseCase _listarCategoriasPorTipoUseCase;
+  final PdfRelatorioGenerator _pdfRelatorioGenerator;
 
   RelatorioController({
     required ObterTotaisUseCase obterTotaisUseCase,
@@ -34,11 +36,13 @@ class RelatorioController extends ChangeNotifier {
     required ObterEvolucaoMensalUseCase obterEvolucaoMensalUseCase,
     required ListarTransacoesUseCase listarTransacoesUseCase,
     required ListarCategoriasPorTipoUseCase listarCategoriasPorTipoUseCase,
+    required PdfRelatorioGenerator pdfRelatorioGenerator,
   })  : _obterTotaisUseCase = obterTotaisUseCase,
         _obterGastosPorCategoriaUseCase = obterGastosPorCategoriaUseCase,
         _obterEvolucaoMensalUseCase = obterEvolucaoMensalUseCase,
         _listarTransacoesUseCase = listarTransacoesUseCase,
-        _listarCategoriasPorTipoUseCase = listarCategoriasPorTipoUseCase;
+        _listarCategoriasPorTipoUseCase = listarCategoriasPorTipoUseCase,
+        _pdfRelatorioGenerator = pdfRelatorioGenerator;
 
   bool _carregando = false;
   String? _mensagemErro;
@@ -395,5 +399,55 @@ class RelatorioController extends ChangeNotifier {
       return 'Receitas menores e despesas maiores no período.';
     }
     return 'Houve variação nas receitas e despesas do período.';
+  }
+
+  /// Gera o relatório financeiro em PDF do período atual e dispara a Share Sheet.
+  ///
+  /// Prepara os dados consolidados (receitas, despesas, totais e mês/ano) e
+  /// delega a renderização e o compartilhamento ao [PdfRelatorioGenerator].
+  Future<void> gerarRelatorioPdf() async {
+    final totais = _totais;
+    if (totais == null) return;
+
+    _carregando = true;
+    _mensagemErro = null;
+    notifyListeners();
+
+    try {
+      final receitas = _movimentacoes
+          .where((t) => t.isReceita)
+          .map((t) => {
+                'descricao': t.descricao,
+                'valorCentavos': t.valorCentavos,
+                'data': t.data,
+              })
+          .toList(growable: false);
+
+      final despesas = _movimentacoes
+          .where((t) => t.isDespesa)
+          .map((t) => {
+                'descricao': t.descricao,
+                'valorCentavos': t.valorCentavos,
+                'data': t.data,
+              })
+          .toList(growable: false);
+
+      final mesAno =
+          FormatadorMoeda.formatarMesAno(_filtro.dataInicial).replaceAll(' ', ' / ');
+
+      await _pdfRelatorioGenerator.gerarECompartilhar(
+        receitas: receitas,
+        despesas: despesas,
+        totalReceitasCentavos: totais.totalReceitas,
+        totalDespesasCentavos: totais.totalDespesas,
+        saldoCentavos: totais.saldo,
+        mesAno: mesAno,
+      );
+    } catch (_) {
+      _mensagemErro = 'Não foi possível gerar o relatório PDF.';
+    } finally {
+      _carregando = false;
+      notifyListeners();
+    }
   }
 }

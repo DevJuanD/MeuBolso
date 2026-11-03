@@ -29,6 +29,7 @@ class RelatoriosPage extends StatefulWidget {
 
 class _RelatoriosPageState extends State<RelatoriosPage> {
   String _filtroMovimentacoes = 'Todas';
+  bool _gerandoPdf = false;
 
   @override
   void initState() {
@@ -49,6 +50,12 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
 
   void _abrirMovimentacoes() {
     Navigator.of(context).pushNamed(RotasApp.movimentacoes);
+  }
+
+  Future<void> _gerarRelatorioPdf() async {
+    setState(() => _gerandoPdf = true);
+    await widget.controller.gerarRelatorioPdf();
+    if (mounted) setState(() => _gerandoPdf = false);
   }
 
   @override
@@ -131,6 +138,39 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: _gerandoPdf ? null : _gerarRelatorioPdf,
+                      icon: _gerandoPdf
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.picture_as_pdf_rounded,
+                              size: 18,
+                            ),
+                      label: Text(
+                        _gerandoPdf
+                            ? 'Gerando PDF...'
+                            : 'Gerar Relatório PDF',
+                        style: const TextStyle(
+                          fontFamily: 'PlusJakartaSans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
